@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>NR-13 · Controle de Inspeções</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-badge">NR-13</div>
+    <div>
+      <h1>Controle de Inspeções</h1>
+      <p>Gestão de equipamentos sob pressão</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" id="themeBtn" title="Alternar tema">🌙</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Cards -->
+  <section class="cards">
+    <div class="card"><h3>Dentro da validade</h3><div class="card-num" id="totalValidas">0</div></div>
+    <div class="card"><h3>Vencem em até 30 dias</h3><div class="card-num" id="totalProximas">0</div></div>
+    <div class="card"><h3>Vencidas</h3><div class="card-num" id="totalVencidas">0</div></div>
+    <div class="card"><h3>Descomissionados</h3><div class="card-num" id="totalDescom">0</div></div>
+  </section>
+
+  <!-- Alertas -->
+  <div class="alertas">
+    <div id="alertaVencidas" class="alerta alerta-red"><span class="blink">⚠</span><span id="alertaVencidasTxt"></span></div>
+    <div id="alertaProximas" class="alerta alerta-yellow"><span>⏰</span><span id="alertaProximasTxt"></span></div>
+  </div>
+
+  <!-- ══ PAINEL E-MAIL ══ -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>✉ Configurar alertas por e-mail</h2>
+      <a href="https://resend.com/api-keys" target="_blank" rel="noopener"
+         style="font-size:12px;color:var(--green);text-decoration:none;font-weight:500">
+        Criar conta Resend (grátis) ↗
+      </a>
+    </div>
+
+    <!-- Aviso de segurança -->
+    <div style="background:var(--yellow-bg);border-left:3px solid var(--yellow);border-radius:0;
+        padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--yellow);line-height:1.6">
+      🔒 <strong>Sua chave fica salva apenas neste navegador</strong> (localStorage).
+      Não é enviada a nenhum servidor além do próprio Resend.
+      Use uma chave com permissão apenas de <em>envio</em>, nunca a chave master.
+    </div>
+
+    <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:14px">
+
+      <div class="field">
+        <label>API Key do Resend</label>
+        <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+               autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="field">
+        <label>E-mail remetente (verificado no Resend)</label>
+        <input type="email" id="fromEmail" placeholder="nr13@suaempresa.com.br">
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1">
+        <label>Destinatários (um por linha ou separados por vírgula)</label>
+        <textarea id="emailDestinatarios" rows="3"
+          placeholder="joao@empresa.com&#10;maria@empresa.com&#10;seguranca@empresa.com"
+          style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;
+            font-size:13px;font-family:'IBM Plex Sans',sans-serif;background:var(--surface2);
+            color:var(--text);resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s"
+          onfocus="this.style.borderColor='var(--green)';this.style.boxShadow='0 0 0 3px color-mix(in srgb,var(--green) 15%,transparent)'"
+          onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="salvarConfiguracoes()">💾 Salvar configurações</button>
+      <button class="btn btn-green" id="btnDispararAlertas" onclick="dispararAlertas()">🚨 Disparar alertas agora</button>
+    </div>
+
+    <p style="font-size:12px;color:var(--text3);margin-top:12px;line-height:1.6">
+      Serão enviados apenas equipamentos <strong style="color:var(--red)">vencidos</strong> e
+      <strong style="color:var(--yellow)">próximos do vencimento</strong>.
+      Descomissionados são ignorados. Se não houver nenhum, o envio é cancelado.
+    </p>
+  </section>
+
+  <!-- Painel cadastro -->
+  <section class="panel" id="formPanel">
+    <div class="panel-header">
+      <h2>Cadastrar equipamento <span id="formMode"></span></h2>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Equipamento</label><input type="text" id="equipamento" placeholder="Ex: Compressor"></div>
+      <div class="field"><label>TAG / Código</label><input type="text" id="tag" placeholder="Ex: CP-01"></div>
+      <div class="field"><label>Setor</label><input type="text" id="setor" placeholder="Ex: Utilidades"></div>
+      <div class="field"><label>Tipo NR-13</label>
+        <select id="tipo">
+          <option value="">Selecione</option>
+          <option>Caldeira</option><option>Vaso de pressão</option>
+          <option>Tubulação</option><option>Tanque metálico</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="field"><label>Última inspeção</label><input type="date" id="ultimaInspecao"></div>
+      <div class="field"><label>Validade (meses)</label><input type="number" id="validadeMeses" placeholder="Ex: 12" min="1"></div>
+      <div class="field"><label>Responsável</label><input type="text" id="responsavel" placeholder="Ex: Técnico SST"></div>
+      <div class="field"><label>Status inicial</label>
+        <select id="statusInicial">
+          <option value="ativo">Ativo</option>
+          <option value="descomissionado">Descomissionado</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
+      <button class="btn btn-ghost" id="btnCancelar" onclick="cancelarEdicao()" style="display:none">✕ Cancelar</button>
+    </div>
+  </section>
+
+  <!-- Painel lista -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Lista de equipamentos <span id="countLabel"></span></h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-yellow" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn btn-red"    onclick="apagarTudo()">🗑 Apagar tudo</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input type="text" id="busca" placeholder="🔍  Buscar por equipamento, TAG ou setor">
+      <select id="filtroStatus">
+        <option value="todos">Todos os status</option>
+        <option value="valida">Dentro da validade</option>
+        <option value="proxima">Vencendo</option>
+        <option value="vencida">Vencida</option>
+        <option value="descomissionado">Descomissionados</option>
+      </select>
+      <select id="filtroTipo">
+        <option value="todos">Todos os tipos</option>
+        <option>Caldeira</option><option>Vaso de pressão</option>
+        <option>Tubulação</option><option>Tanque metálico</option><option>Outro</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Equipamento</th><th>TAG</th><th>Setor</th><th>Tipo NR-13</th>
+          <th>Última inspeção</th><th>Próxima inspeção</th><th>Dias restantes</th>
+          <th>Responsável</th><th>Status</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="tabelaEquipamentos"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Confirmar</h2>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <p id="modalMsg" style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:20px"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-red" id="modalConfirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
