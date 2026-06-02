@@ -6,7 +6,22 @@
   <title>NR-13 · Controle de Inspeções</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="nr13.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey:            "AIzaSyAApIAP19R7bwZWSuTITJyVHIkd0eQlOuQ",
+      authDomain:        "automa-f4c7b.firebaseapp.com",
+      projectId:         "automa-f4c7b",
+      storageBucket:     "automa-f4c7b.firebasestorage.app",
+      messagingSenderId: "37705373509",
+      appId:             "1:37705373509:web:dccc91034deff70394902c"
+    });
+    window.db = firebase.firestore();
+  </script>
 </head>
 <body>
 
@@ -39,7 +54,7 @@
     <div id="alertaProximas" class="alerta alerta-yellow"><span>⏰</span><span id="alertaProximasTxt"></span></div>
   </div>
 
-  <!-- ══ PAINEL E-MAIL ══ -->
+  <!-- Painel e-mail -->
   <section class="panel">
     <div class="panel-header">
       <h2>✉ Configurar alertas por e-mail</h2>
@@ -48,54 +63,38 @@
         Criar conta Resend (grátis) ↗
       </a>
     </div>
-
-    <!-- Aviso de segurança -->
-    <div style="background:var(--yellow-bg);border-left:3px solid var(--yellow);border-radius:0;
-        padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--yellow);line-height:1.6">
-      🔒 <strong>Sua chave fica salva apenas neste navegador</strong> (localStorage).
-      Não é enviada a nenhum servidor além do próprio Resend.
-      Use uma chave com permissão apenas de <em>envio</em>, nunca a chave master.
+    <div style="background:var(--yellow-bg);border-left:3px solid var(--yellow);padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--yellow);line-height:1.6">
+      🔒 <strong>Sua chave fica salva apenas neste navegador.</strong> Use remetente <code>onboarding@resend.dev</code> para testes.
     </div>
-
     <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:14px">
-
       <div class="field">
         <label>API Key do Resend</label>
-        <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxxxxxxxxx"
-               autocomplete="off" spellcheck="false">
+        <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
       </div>
-
       <div class="field">
-        <label>E-mail remetente (verificado no Resend)</label>
-        <input type="email" id="fromEmail" placeholder="nr13@suaempresa.com.br">
+        <label>E-mail remetente</label>
+        <input type="email" id="fromEmail" placeholder="onboarding@resend.dev">
       </div>
-
-      <div class="field" style="grid-column: 1 / -1">
+      <div class="field" style="grid-column:1/-1">
         <label>Destinatários (um por linha ou separados por vírgula)</label>
         <textarea id="emailDestinatarios" rows="3"
-          placeholder="joao@empresa.com&#10;maria@empresa.com&#10;seguranca@empresa.com"
-          style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;
-            font-size:13px;font-family:'IBM Plex Sans',sans-serif;background:var(--surface2);
-            color:var(--text);resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s"
+          placeholder="joao@empresa.com&#10;maria@empresa.com"
+          style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;background:var(--surface2);color:var(--text);resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s"
           onfocus="this.style.borderColor='var(--green)';this.style.boxShadow='0 0 0 3px color-mix(in srgb,var(--green) 15%,transparent)'"
           onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
       </div>
-
     </div>
-
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="salvarConfiguracoes()">💾 Salvar configurações</button>
       <button class="btn btn-green" id="btnDispararAlertas" onclick="dispararAlertas()">🚨 Disparar alertas agora</button>
     </div>
-
     <p style="font-size:12px;color:var(--text3);margin-top:12px;line-height:1.6">
       Serão enviados apenas equipamentos <strong style="color:var(--red)">vencidos</strong> e
-      <strong style="color:var(--yellow)">próximos do vencimento</strong>.
-      Descomissionados são ignorados. Se não houver nenhum, o envio é cancelado.
+      <strong style="color:var(--yellow)">próximos do vencimento</strong>. Descomissionados são ignorados.
     </p>
   </section>
 
-  <!-- Painel cadastro -->
+  <!-- Cadastro -->
   <section class="panel" id="formPanel">
     <div class="panel-header">
       <h2>Cadastrar equipamento <span id="formMode"></span></h2>
@@ -127,7 +126,7 @@
     </div>
   </section>
 
-  <!-- Painel lista -->
+  <!-- Lista -->
   <section class="panel">
     <div class="panel-header">
       <h2>Lista de equipamentos <span id="countLabel"></span></h2>
@@ -182,6 +181,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script src="nr13.js"></script>
 </body>
 </html>
