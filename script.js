@@ -45,17 +45,17 @@ function aplicarTema() {
 
 // ── CONFIGURAÇÕES DE E-MAIL ──
 function carregarConfiguracoes() {
-  document.getElementById("resendApiKey").value       = localStorage.getItem("nr13_resend_key")    || "";
+  document.getElementById("brevoApiKey").value       = localStorage.getItem("nr13_brevo_key")    || "";
   document.getElementById("fromEmail").value          = localStorage.getItem("nr13_from_email")    || "";
   document.getElementById("emailDestinatarios").value = localStorage.getItem("nr13_destinatarios") || "";
 }
 function salvarConfiguracoes() {
-  const key   = document.getElementById("resendApiKey").value.trim();
+  const key   = document.getElementById("brevoApiKey").value.trim();
   const from  = document.getElementById("fromEmail").value.trim();
   const dests = document.getElementById("emailDestinatarios").value.trim();
-  if (!key)  { mostrarToast("Cole sua API Key do Resend.", "red"); return; }
+  if (!key)  { mostrarToast("Cole sua API Key do Brevo.", "red"); return; }
   if (!from) { mostrarToast("Informe o e-mail remetente.", "red"); return; }
-  localStorage.setItem("nr13_resend_key",    key);
+  localStorage.setItem("nr13_brevo_key",    key);
   localStorage.setItem("nr13_from_email",    from);
   localStorage.setItem("nr13_destinatarios", dests);
   mostrarToast("Configurações salvas!", "green");
@@ -275,10 +275,10 @@ function fecharModal() { document.getElementById("modalOverlay").classList.remov
 
 // ── DISPARAR ALERTAS ──
 async function dispararAlertas() {
-  const apiKey = localStorage.getItem("nr13_resend_key");
+  const apiKey = localStorage.getItem("nr13_brevo_key");
   const from   = localStorage.getItem("nr13_from_email");
   const dests  = obterListaEmails();
-  if (!apiKey) { mostrarToast("Salve sua API Key do Resend primeiro.", "red"); return; }
+  if (!apiKey) { mostrarToast("Salve sua API Key do Brevo primeiro.", "red"); return; }
   if (!from)   { mostrarToast("Salve o e-mail remetente primeiro.", "red"); return; }
   if (!dests.length) { mostrarToast("Adicione ao menos um destinatário.", "red"); return; }
 
@@ -301,13 +301,18 @@ async function dispararAlertas() {
   const proximas = paraEnvio.filter(e => e.statusCalculado === "proxima");
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
-      headers: { "Content-Type":"application/json", "Authorization":`Bearer ${apiKey}` },
-      body: JSON.stringify({ from, to: dests, subject: gerarAssunto(vencidas, proximas), html: gerarHTML(vencidas, proximas) }),
+      headers: { "Content-Type": "application/json", "api-key": apiKey },
+      body: JSON.stringify({
+        sender: { name: "NR-13 Alertas", email: from },
+        to: dests.map(email => ({ email })),
+        subject: gerarAssunto(vencidas, proximas),
+        htmlContent: gerarHTML(vencidas, proximas),
+      }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Erro na API");
+    if (!res.ok) throw new Error(data.message || "Erro na API Brevo");
     mostrarToast(`✅ E-mail enviado para ${dests.length} destinatário(s)!`, "green");
   } catch(err) {
     mostrarToast(`❌ Erro: ${err.message}`, "red");
