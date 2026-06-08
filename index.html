@@ -6,7 +6,7 @@
   <title>NR-13 · Controle de Inspeções</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="nr13.css">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -58,22 +58,22 @@
   <section class="panel">
     <div class="panel-header">
       <h2>✉ Configurar alertas por e-mail</h2>
-      <a href="https://resend.com/api-keys" target="_blank" rel="noopener"
+      <a href="https://app.brevo.com/settings/keys/api" target="_blank" rel="noopener"
          style="font-size:12px;color:var(--green);text-decoration:none;font-weight:500">
-        Criar conta Resend (grátis) ↗
+        Criar conta Brevo (grátis) ↗
       </a>
     </div>
     <div style="background:var(--yellow-bg);border-left:3px solid var(--yellow);padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--yellow);line-height:1.6">
-      🔒 <strong>Sua chave fica salva apenas neste navegador.</strong> Use remetente <code>onboarding@resend.dev</code> para testes.
+      🔒 <strong>Sua chave fica salva apenas neste navegador.</strong> Use remetente <code>seu-email@gmail.com</code> para testes.
     </div>
     <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:14px">
       <div class="field">
-        <label>API Key do Resend</label>
-        <input type="password" id="resendApiKey" placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+        <label>API Key do Brevo</label>
+        <input type="password" id="brevoApiKey" placeholder="xkeysib-..." autocomplete="off">
       </div>
       <div class="field">
         <label>E-mail remetente</label>
-        <input type="email" id="fromEmail" placeholder="onboarding@resend.dev">
+        <input type="email" id="fromEmail" placeholder="seu-email@gmail.com">
       </div>
       <div class="field" style="grid-column:1/-1">
         <label>Destinatários (um por linha ou separados por vírgula)</label>
@@ -181,6 +181,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script src="nr13.js"></script>
 </body>
 </html>
