@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Utilidades · Bebedouros &amp; ACs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase (mesmo projeto do index.html) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey:            "AIzaSyAApIAP19R7bwZWSuTITJyVHIkd0eQlOuQ",
+      authDomain:        "automa-f4c7b.firebaseapp.com",
+      projectId:         "automa-f4c7b",
+      storageBucket:     "automa-f4c7b.firebasestorage.app",
+      messagingSenderId: "37705373509",
+      appId:             "1:37705373509:web:dccc91034deff70394902c"
+    });
+    window.db = firebase.firestore();
+  </script>
+
+  <style>
+    /* ── Estilos extras desta página (não conflitam com style.css) ── */
+
+    /* Nav pills no header */
+    .nav-pills { display: flex; gap: 8px; align-items: center; }
+
+    .nav-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; text-decoration: none;
+      font-family: 'IBM Plex Sans', sans-serif;
+      border: 1px solid transparent;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap;
+    }
+    .nav-pill:hover { opacity: .82; }
+
+    .nav-pill.inactive {
+      background: rgba(255,255,255,.18);
+      color: white;
+      border-color: rgba(255,255,255,.25);
+    }
+    .nav-pill.active {
+      background: white;
+      color: var(--green, #157347);
+      border-color: white;
+    }
+
+    /* Badges de tipo na tabela */
+    .type-badge {
+      display: inline-block; padding: 2px 9px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      font-family: 'IBM Plex Mono', monospace;
+      border: 1px solid;
+    }
+    .type-beb  { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .type-ac   { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+
+    /* Linhas da tabela — hover igual ao style.css original */
+    [data-theme="dark"] .type-beb { background: #1e3a5f; color: #93c5fd; border-color: #1e40af; }
+    [data-theme="dark"] .type-ac  { background: #2e1a4a; color: #c4b5fd; border-color: #5b21b6; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-badge">UTIL</div>
+    <div>
+      <h1>Bebedouros &amp; ACs</h1>
+      <p>Manutenção preventiva e higienização</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <!-- Navegação entre páginas -->
+    <nav class="nav-pills">
+      <a href="index.html"       class="nav-pill inactive">⚙️ NR-13</a>
+      <a href="utilidades.html"  class="nav-pill active">🌡️ Utilidades</a>
+    </nav>
+    <button class="theme-toggle" id="themeBtn" title="Alternar tema">🌙</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Cards -->
+  <section class="cards">
+    <div class="card"><h3>Dentro da validade</h3><div class="card-num" id="totalOk">0</div></div>
+    <div class="card"><h3>Vencem em até 30 dias</h3><div class="card-num" id="totalWarn">0</div></div>
+    <div class="card"><h3>Vencidas</h3><div class="card-num" id="totalDanger">0</div></div>
+    <div class="card"><h3>Desativados</h3><div class="card-num" id="totalOff">0</div></div>
+  </section>
+
+  <!-- Alertas -->
+  <div class="alertas">
+    <div id="alertaDanger" class="alerta alerta-red"   style="display:none"><span class="blink">⚠</span><span id="alertaDangerTxt"></span></div>
+    <div id="alertaWarn"   class="alerta alerta-yellow" style="display:none"><span>⏰</span><span id="alertaWarnTxt"></span></div>
+  </div>
+
+  <!-- Cadastro -->
+  <section class="panel" id="formPanel">
+    <div class="panel-header">
+      <h2>Cadastrar equipamento <span id="formMode"></span></h2>
+    </div>
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Equipamento</label>
+        <input type="text" id="f-nome" placeholder="Ex: Bebedouro">
+      </div>
+
+      <div class="field">
+        <label>TAG / Código</label>
+        <input type="text" id="f-tag" placeholder="Ex: BD-01">
+      </div>
+
+      <div class="field">
+        <label>Modelo</label>
+        <input type="text" id="f-modelo" placeholder="Ex: Consul CGB30">
+      </div>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select id="f-tipo" onchange="onTipoChange()">
+          <option value="">Selecione</option>
+          <optgroup label="── Bebedouros ──">
+            <option>Bebedouro de pressão</option>
+            <option>Bebedouro de coluna</option>
+            <option>Purificador de água</option>
+            <option>Bebedouro industrial</option>
+          </optgroup>
+          <optgroup label="── Ar-Condicionado ──">
+            <option>Split hi-wall</option>
+            <option>Split cassete</option>
+            <option>Split piso-teto</option>
+            <option>VRF / VRV</option>
+            <option>Janela</option>
+            <option>Self-contained</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Localização / Setor</label>
+        <input type="text" id="f-local" placeholder="Ex: Refeitório bloco A">
+      </div>
+
+      <div class="field">
+        <label>Última manutenção</label>
+        <input type="date" id="f-ultima">
+      </div>
+
+      <div class="field">
+        <label>Periodicidade (meses)</label>
+        <input type="number" id="f-periodo" placeholder="Ex: 6" min="1">
+      </div>
+
+      <div class="field">
+        <label>Tipo de serviço</label>
+        <select id="f-servico">
+          <option>Higienização</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Responsável</label>
+        <input type="text" id="f-resp" placeholder="Ex: Empresa XYZ">
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="ativo">Ativo</option>
+          <option value="desativado">Desativado</option>
+        </select>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
+      <button class="btn btn-ghost" id="btnCancelar" onclick="cancelarEdicao()" style="display:none">✕ Cancelar</button>
+    </div>
+  </section>
+
+  <!-- Lista -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Lista de equipamentos <span id="countLabel"></span></h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-yellow" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn btn-red"    onclick="apagarTudo()">🗑 Apagar tudo</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input type="text" id="busca" placeholder="🔍  Buscar por nome, TAG, modelo ou local">
+      <select id="filtroStatus">
+        <option value="todos">Todos os status</option>
+        <option value="ok">Dentro da validade</option>
+        <option value="warn">Vencendo</option>
+        <option value="danger">Vencida</option>
+        <option value="off">Desativado</option>
+      </select>
+      <select id="filtroCateg">
+        <option value="todos">Todas as categorias</option>
+        <option value="beb">Bebedouros</option>
+        <option value="ac">Ar-Condicionados</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Equipamento</th>
+          <th>TAG</th>
+          <th>Modelo</th>
+          <th>Tipo</th>
+          <th>Local / Setor</th>
+          <th>Última manutenção</th>
+          <th>Próxima manutenção</th>
+          <th>Dias restantes</th>
+          <th>Serviço</th>
+          <th>Responsável</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr></thead>
+        <tbody id="tabelaUtil"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal (mesmo padrão do index.html) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Confirmar</h2>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <p id="modalMsg" style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:20px"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-red" id="modalConfirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   TEMA — idêntico ao script.js do index.html
+════════════════════════════════════════════════ */
+const root = document.documentElement;
+
+function aplicarTema(tema) {
+  root.setAttribute("data-theme", tema);
+  document.getElementById("themeBtn").textContent = tema === "dark" ? "☀️" : "🌙";
+  localStorage.setItem("tema", tema);
+}
+
+document.getElementById("themeBtn").addEventListener("click", () => {
+  aplicarTema(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+});
+
+// Sincroniza com o tema salvo pelo index.html
+aplicarTema(localStorage.getItem("tema") || "light");
+
+
+/* ════════════════════════════════════════════════
+   CONSTANTES DE TIPO
+════════════════════════════════════════════════ */
+const TIPOS_BEB = [
+  "Bebedouro de pressão","Bebedouro de coluna",
+  "Purificador de água","Bebedouro industrial"
+];
+const TIPOS_AC = [
+  "Split hi-wall","Split cassete","Split piso-teto",
+  "VRF / VRV","Janela","Self-contained"
+];
+
+function categoriaDe(tipo) {
+  if (TIPOS_BEB.includes(tipo)) return "beb";
+  if (TIPOS_AC.includes(tipo))  return "ac";
+  return "outro";
+}
+
+function onTipoChange() {
+  const t   = document.getElementById("f-tipo").value;
+  const sel = document.getElementById("f-servico");
+  if (TIPOS_BEB.includes(t)) {
+    sel.innerHTML = `
+      <option>Higienização</option>
+      <option>Troca de filtro</option>
+      <option>Análise da água</option>
+      <option>Revisão geral</option>`;
+  } else if (TIPOS_AC.includes(t)) {
+    sel.innerHTML = `
+      <option>Limpeza de filtro</option>
+      <option>Limpeza de serpentina</option>
+      <option>Recarga de gás</option>
+      <option>Revisão elétrica</option>
+      <option>Manutenção preventiva</option>`;
+  } else {
+    sel.innerHTML = `<option>Manutenção preventiva</option>`;
+  }
+}
+
+
+/* ════════════════════════════════════════════════
+   FIREBASE — coleção separada "utilidades"
+════════════════════════════════════════════════ */
+const COL = db.collection("utilidades");
+let editandoId = null;
+
+// Escuta em tempo real (igual ao padrão Firestore do script.js)
+COL.orderBy("nome").onSnapshot(snap => {
+  window._util = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderizar();
+}, err => console.error("Firestore:", err));
+
+
+/* ════════════════════════════════════════════════
+   UTILS DE DATA
+════════════════════════════════════════════════ */
+function proximaData(ultima, meses) {
+  const d = new Date(ultima + "T00:00:00");
+  d.setMonth(d.getMonth() + meses);
+  return d;
+}
+
+function diasAte(d) {
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const alvo = new Date(d); alvo.setHours(0,0,0,0);
+  return Math.ceil((alvo - hoje) / 86400000);
+}
+
+function fmtData(d) {
+  return new Date(d).toLocaleDateString("pt-BR");
+}
+
+function calcStatus(item) {
+  if (item.status === "desativado") return { cls:"off",    txt:"Desativado" };
+  const prox = proximaData(item.ultima, item.periodo);
+  const dias = diasAte(prox);
+  if (dias < 0)      return { cls:"danger", txt:"Vencida",             dias };
+  if (dias <= 30)    return { cls:"warn",   txt:"Vence em breve",      dias };
+                     return { cls:"ok",     txt:"Dentro da validade",  dias };
+}
+
+
+/* ════════════════════════════════════════════════
+   FORMULÁRIO
+════════════════════════════════════════════════ */
+function submitForm() {
+  const nome    = document.getElementById("f-nome").value.trim();
+  const tag     = document.getElementById("f-tag").value.trim();
+  const modelo  = document.getElementById("f-modelo").value.trim();
+  const tipo    = document.getElementById("f-tipo").value;
+  const local   = document.getElementById("f-local").value.trim();
+  const ultima  = document.getElementById("f-ultima").value;
+  const periodo = Number(document.getElementById("f-periodo").value);
+  const servico = document.getElementById("f-servico").value;
+  const resp    = document.getElementById("f-resp").value.trim();
+  const status  = document.getElementById("f-status").value;
+
+  if (!nome || !tag || !modelo || !tipo || !local || !ultima || !periodo || !resp) {
+    alert("Preencha todos os campos obrigatórios.");
+    return;
+  }
+
+  const payload = { nome, tag, modelo, tipo, local, ultima, periodo, servico, resp, status };
+
+  if (editandoId) {
+    COL.doc(editandoId).update(payload)
+      .then(() => { cancelarEdicao(); })
+      .catch(e => alert("Erro ao salvar: " + e.message));
+  } else {
+    COL.add(payload)
+      .then(() => { limparFormulario(); })
+      .catch(e => alert("Erro ao adicionar: " + e.message));
+  }
+}
+
+function limparFormulario() {
+  ["f-nome","f-tag","f-modelo","f-local","f-ultima","f-periodo","f-resp"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f-tipo").value   = "";
+  document.getElementById("f-status").value = "ativo";
+  document.getElementById("f-servico").innerHTML = "<option>Higienização</option>";
+}
+
+function cancelarEdicao() {
+  editandoId = null;
+  limparFormulario();
+  document.getElementById("formMode").textContent    = "";
+  document.getElementById("btnSubmit").textContent   = "＋ Adicionar";
+  document.getElementById("btnCancelar").style.display = "none";
+}
+
+function iniciarEdicao(item) {
+  editandoId = item.id;
+  document.getElementById("f-nome").value   = item.nome;
+  document.getElementById("f-tag").value    = item.tag;
+  document.getElementById("f-modelo").value = item.modelo;
+  document.getElementById("f-tipo").value   = item.tipo;
+  onTipoChange();
+  document.getElementById("f-local").value   = item.local;
+  document.getElementById("f-ultima").value  = item.ultima;
+  document.getElementById("f-periodo").value = item.periodo;
+  document.getElementById("f-servico").value = item.servico;
+  document.getElementById("f-resp").value    = item.resp;
+  document.getElementById("f-status").value  = item.status || "ativo";
+  document.getElementById("formMode").textContent      = "— editando";
+  document.getElementById("btnSubmit").textContent     = "✓ Salvar alterações";
+  document.getElementById("btnCancelar").style.display = "inline-flex";
+  document.getElementById("formPanel").scrollIntoView({ behavior:"smooth" });
+}
+
+
+/* ════════════════════════════════════════════════
+   EXCLUSÃO (com modal igual ao index.html)
+════════════════════════════════════════════════ */
+let _pendingDelete = null;
+
+function confirmarExclusao(id, nome) {
+  _pendingDelete = id;
+  document.getElementById("modalTitle").textContent = "Excluir equipamento";
+  document.getElementById("modalMsg").textContent   = `Deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
+  document.getElementById("modalConfirmBtn").onclick = executarExclusao;
+  document.getElementById("modalOverlay").classList.add("show");
+}
+
+function executarExclusao() {
+  if (!_pendingDelete) return;
+  COL.doc(_pendingDelete).delete()
+    .then(() => fecharModal())
+    .catch(e => alert("Erro ao excluir: " + e.message));
+}
+
+function fecharModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+  _pendingDelete = null;
+}
+
+function apagarTudo() {
+  if (!window._util || !window._util.length) { alert("Nenhum dado para apagar."); return; }
+  document.getElementById("modalTitle").textContent = "Apagar tudo";
+  document.getElementById("modalMsg").textContent   = `Apagar TODOS os ${window._util.length} equipamentos? Esta ação não pode ser desfeita.`;
+  document.getElementById("modalConfirmBtn").onclick = async () => {
+    const batch = db.batch();
+    window._util.forEach(i => batch.delete(COL.doc(i.id)));
+    await batch.commit();
+    fecharModal();
+  };
+  document.getElementById("modalOverlay").classList.add("show");
+}
+
+
+/* ════════════════════════════════════════════════
+   FILTROS
+════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", () => {
+  ["busca","filtroStatus","filtroCateg"].forEach(id => {
+    document.getElementById(id).addEventListener("input",  renderizar);
+    document.getElementById(id).addEventListener("change", renderizar);
+  });
+});
+
+function limparFiltros() {
+  document.getElementById("busca").value        = "";
+  document.getElementById("filtroStatus").value = "todos";
+  document.getElementById("filtroCateg").value  = "todos";
+  renderizar();
+}
+
+
+/* ════════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════ */
+function renderizar() {
+  const items = window._util || [];
+  const busca  = document.getElementById("busca").value.toLowerCase();
+  const fSt    = document.getElementById("filtroStatus").value;
+  const fCat   = document.getElementById("filtroCateg").value;
+  const tbody  = document.getElementById("tabelaUtil");
+  tbody.innerHTML = "";
+
+  let ct = { ok:0, warn:0, danger:0, off:0 };
+
+  if (!items.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="12" style="text-align:center;padding:52px 20px;color:var(--text3)">
+        <div style="font-size:32px;margin-bottom:10px;opacity:.4">🌡️</div>
+        <div style="font-size:13px">Nenhum equipamento cadastrado ainda.</div>
+      </td></tr>`;
+    atualizarCards(ct); atualizarAlertas(ct); return;
+  }
+
+  const filtrados = items.filter(item => {
+    const st  = calcStatus(item);
+    const cat = categoriaDe(item.tipo);
+    const mB  = item.nome.toLowerCase().includes(busca)
+              || item.tag.toLowerCase().includes(busca)
+              || (item.modelo||"").toLowerCase().includes(busca)
+              || (item.local||"").toLowerCase().includes(busca);
+    if (!mB) return false;
+    if (fSt  !== "todos" && fSt  !== st.cls)  return false;
+    if (fCat !== "todos" && fCat !== cat)      return false;
+    return true;
+  });
+
+  // Contagem total (sem filtro)
+  items.forEach(item => { ct[calcStatus(item).cls]++; });
+
+  document.getElementById("countLabel").textContent =
+    filtrados.length !== items.length
+      ? `(${filtrados.length} de ${items.length})`
+      : `(${items.length})`;
+
+  filtrados.forEach(item => {
+    const st      = calcStatus(item);
+    const cat     = categoriaDe(item.tipo);
+    const prox    = item.status === "desativado" ? "—"
+                  : fmtData(proximaData(item.ultima, item.periodo));
+    const diasCel = item.status === "desativado" ? "—"
+                  : st.dias < 0
+                    ? `<span style="color:var(--red);font-weight:600">${Math.abs(st.dias)} dias vencido</span>`
+                    : `${st.dias} dias`;
+    const badgeCls   = cat === "beb" ? "type-beb" : cat === "ac" ? "type-ac" : "";
+    const tipoBadge  = `<span class="type-badge ${badgeCls}">${item.tipo}</span>`;
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${item.nome}</strong></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${item.tag}</td>
+        <td style="color:var(--text2)">${item.modelo}</td>
+        <td>${tipoBadge}</td>
+        <td style="color:var(--text2)">${item.local}</td>
+        <td>${fmtData(item.ultima+"T00:00:00")}</td>
+        <td>${prox}</td>
+        <td>${diasCel}</td>
+        <td style="color:var(--text2)">${item.servico}</td>
+        <td style="color:var(--text2)">${item.resp}</td>
+        <td><span class="badge badge-${st.cls}">${st.txt}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-yellow btn-sm" onclick='iniciarEdicao(${JSON.stringify(item)})'>✏</button>
+            <button class="btn btn-red    btn-sm" onclick="confirmarExclusao('${item.id}','${item.nome.replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  atualizarCards(ct);
+  atualizarAlertas(ct);
+}
+
+function atualizarCards(ct) {
+  document.getElementById("totalOk").textContent     = ct.ok;
+  document.getElementById("totalWarn").textContent   = ct.warn;
+  document.getElementById("totalDanger").textContent = ct.danger;
+  document.getElementById("totalOff").textContent    = ct.off;
+}
+
+function atualizarAlertas(ct) {
+  const ad = document.getElementById("alertaDanger");
+  const aw = document.getElementById("alertaWarn");
+  if (ct.danger > 0) {
+    document.getElementById("alertaDangerTxt").textContent =
+      ` ${ct.danger} equipamento(s) com manutenção VENCIDA. Ação imediata necessária.`;
+    ad.style.display = "flex";
+  } else ad.style.display = "none";
+
+  if (ct.warn > 0) {
+    document.getElementById("alertaWarnTxt").textContent =
+      ` ${ct.warn} equipamento(s) vence(m) nos próximos 30 dias.`;
+    aw.style.display = "flex";
+  } else aw.style.display = "none";
+}
+
+
+/* ════════════════════════════════════════════════
+   CSV
+════════════════════════════════════════════════ */
+function exportarCSV() {
+  const items = window._util || [];
+  if (!items.length) { alert("Nenhum dado para exportar."); return; }
+  let csv = "Equipamento;TAG;Modelo;Tipo;Local;Ultima Manut.;Periodicidade(meses);Servico;Responsavel;Status\n";
+  items.forEach(i => {
+    const s = calcStatus(i);
+    csv += `${i.nome};${i.tag};${i.modelo};${i.tipo};${i.local};${i.ultima};${i.periodo};${i.servico};${i.resp};${s.txt}\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+  a.download = "utilidades_"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();
+}
+</script>
+</body>
+</html>
