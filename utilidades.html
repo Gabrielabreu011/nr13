@@ -109,6 +109,46 @@
     <div id="alertaWarn"   class="alerta alerta-yellow"><span>⏰</span><span id="alertaWarnTxt"></span></div>
   </div>
 
+  <!-- Painel e-mail -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>✉ Configurar alertas por e-mail</h2>
+      <a href="https://app.brevo.com/settings/keys/api" target="_blank" rel="noopener"
+         style="font-size:12px;color:var(--green);text-decoration:none;font-weight:500">
+        Criar conta Brevo (grátis) ↗
+      </a>
+    </div>
+    <div style="background:var(--yellow-bg);border-left:3px solid var(--yellow);padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--yellow);line-height:1.6">
+      🔒 <strong>Sua chave fica salva apenas neste navegador.</strong> Configuração separada do NR-13.
+    </div>
+    <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:14px">
+      <div class="field">
+        <label>API Key do Brevo</label>
+        <input type="password" id="util-brevoApiKey" placeholder="xkeysib-..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>E-mail remetente</label>
+        <input type="email" id="util-fromEmail" placeholder="seu-email@gmail.com">
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Destinatários (um por linha ou separados por vírgula)</label>
+        <textarea id="util-emailDestinatarios" rows="3"
+          placeholder="joao@empresa.com&#10;maria@empresa.com"
+          style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;background:var(--surface2);color:var(--text);resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s"
+          onfocus="this.style.borderColor='var(--green)';this.style.boxShadow='0 0 0 3px color-mix(in srgb,var(--green) 15%,transparent)'"
+          onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="salvarConfigUtil()">💾 Salvar configurações</button>
+      <button class="btn btn-green" id="btnDispararUtil" onclick="dispararAlertasUtil()">🚨 Disparar alertas agora</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:12px;line-height:1.6">
+      Serão enviados apenas equipamentos <strong style="color:var(--red)">vencidos</strong> e
+      <strong style="color:var(--yellow)">próximos do vencimento</strong>. Desativados são ignorados.
+    </p>
+  </section>
+
   <!-- Cadastro -->
   <section class="panel" id="formPanel">
     <div class="panel-header">
@@ -335,6 +375,7 @@ COL.orderBy("nome").onSnapshot(snap => {
    INIT
 ════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
+  carregarConfigUtil();
   document.getElementById("busca").addEventListener("input",  renderizar);
   document.getElementById("filtroStatus").addEventListener("change", renderizar);
   document.getElementById("filtroCateg").addEventListener("change",  renderizar);
@@ -650,6 +691,142 @@ function mostrarToast(msg, tipo = "green") {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => { t.style.animation = "toastOut .3s ease forwards"; setTimeout(() => t.remove(), 300); }, 4500);
+}
+
+/* ════════════════════════════════════════
+   BREVO — chaves separadas do NR-13
+════════════════════════════════════════ */
+function carregarConfigUtil() {
+  document.getElementById("util-brevoApiKey").value        = localStorage.getItem("util_brevo_key")    || "";
+  document.getElementById("util-fromEmail").value          = localStorage.getItem("util_from_email")   || "";
+  document.getElementById("util-emailDestinatarios").value = localStorage.getItem("util_destinatarios") || "";
+}
+
+function salvarConfigUtil() {
+  const key  = document.getElementById("util-brevoApiKey").value.trim();
+  const from = document.getElementById("util-fromEmail").value.trim();
+  const dest = document.getElementById("util-emailDestinatarios").value.trim();
+  if (!key)  { mostrarToast("Cole sua API Key do Brevo.", "red"); return; }
+  if (!from) { mostrarToast("Informe o e-mail remetente.", "red"); return; }
+  localStorage.setItem("util_brevo_key",    key);
+  localStorage.setItem("util_from_email",   from);
+  localStorage.setItem("util_destinatarios", dest);
+  mostrarToast("Configurações salvas!", "green");
+}
+
+function obterEmailsUtil() {
+  return document.getElementById("util-emailDestinatarios").value
+    .split(/[\n,;]+/).map(e => e.trim()).filter(e => e.includes("@"));
+}
+
+async function dispararAlertasUtil() {
+  const apiKey = localStorage.getItem("util_brevo_key");
+  const from   = localStorage.getItem("util_from_email");
+  const dests  = obterEmailsUtil();
+  if (!apiKey)       { mostrarToast("Salve sua API Key do Brevo primeiro.", "red"); return; }
+  if (!from)         { mostrarToast("Salve o e-mail remetente primeiro.", "red"); return; }
+  if (!dests.length) { mostrarToast("Adicione ao menos um destinatário.", "red"); return; }
+
+  const paraEnvio = utilItems
+    .filter(i => i.status !== "desativado")
+    .map(item => {
+      const st = calcStatus(item);
+      return { ...item, stCls: st.cls, dias: st.dias,
+               proximaFmt: fmtData(calcularProxima(item.ultima, item.periodo)) };
+    })
+    .filter(i => i.stCls === "danger" || i.stCls === "warn");
+
+  if (!paraEnvio.length) {
+    mostrarToast("Nenhum equipamento vencido ou próximo do vencimento.", "yellow");
+    return;
+  }
+
+  const btn = document.getElementById("btnDispararUtil");
+  btn.textContent = "Enviando…"; btn.disabled = true;
+
+  const vencidas = paraEnvio.filter(e => e.stCls === "danger");
+  const proximas = paraEnvio.filter(e => e.stCls === "warn");
+
+  const linhaUtil = e => {
+    const cor = e.stCls === "danger" ? "#c8253d" : "#d9820a";
+    const txt = e.dias < 0 ? `${Math.abs(e.dias)}d vencido` : `${e.dias}d restantes`;
+    return `<tr style="border-bottom:1px solid #e2e6ea">
+      <td style="padding:10px 14px;font-weight:600">${e.nome}</td>
+      <td style="padding:10px 14px;font-family:monospace">${e.tag}</td>
+      <td style="padding:10px 14px">${e.modelo}</td>
+      <td style="padding:10px 14px">${e.tipo}</td>
+      <td style="padding:10px 14px">${e.local}</td>
+      <td style="padding:10px 14px">${e.proximaFmt}</td>
+      <td style="padding:10px 14px;font-weight:700;color:${cor}">${txt}</td>
+      <td style="padding:10px 14px">${e.resp}</td>
+    </tr>`;
+  };
+
+  const blocoUtil = (titulo, cor, icone, itens) => {
+    if (!itens.length) return "";
+    return `<div style="margin-bottom:32px">
+      <h2 style="font-size:15px;font-weight:700;color:${cor};padding:12px 16px;background:${cor}18;border-left:4px solid ${cor};border-radius:4px;margin:0 0 12px">${icone} ${titulo} (${itens.length})</h2>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;color:#1a1d23">
+        <thead><tr style="background:#f0f2f5">
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Equipamento</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">TAG</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Modelo</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Tipo</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Local</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Próx. Manutenção</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Prazo</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#8e97a6;text-transform:uppercase">Responsável</th>
+        </tr></thead>
+        <tbody>${itens.map(linhaUtil).join("")}</tbody>
+      </table>
+    </div>`;
+  };
+
+  const hoje = new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"});
+  const assuntoParts = [];
+  if (vencidas.length) assuntoParts.push(`${vencidas.length} vencida(s)`);
+  if (proximas.length) assuntoParts.push(`${proximas.length} vencendo em breve`);
+
+  const htmlEmail = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:'Helvetica Neue',Arial,sans-serif">
+<div style="max-width:760px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+  <div style="background:#0d9e5c;padding:28px 32px;display:flex;align-items:center;gap:14px">
+    <span style="background:rgba(255,255,255,.2);color:#fff;font-family:monospace;font-size:13px;font-weight:700;padding:6px 12px;border-radius:6px">UTIL</span>
+    <div><h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Alerta de Manutenção</h1>
+    <p style="color:rgba(255,255,255,.8);font-size:13px;margin:4px 0 0">Bebedouros &amp; ACs · Gerado em ${hoje}</p></div>
+  </div>
+  <div style="padding:20px 32px;background:#f7f8fa;border-bottom:1px solid #e2e6ea;display:flex;gap:20px;flex-wrap:wrap">
+    ${vencidas.length ? `<div style="background:#fde8eb;border-left:4px solid #c8253d;padding:12px 16px;border-radius:4px;flex:1;min-width:140px"><div style="font-size:28px;font-weight:700;color:#c8253d;font-family:monospace">${vencidas.length}</div><div style="font-size:12px;color:#842029;text-transform:uppercase;font-weight:600">Vencidas</div></div>` : ""}
+    ${proximas.length ? `<div style="background:#fef3e0;border-left:4px solid #d9820a;padding:12px 16px;border-radius:4px;flex:1;min-width:140px"><div style="font-size:28px;font-weight:700;color:#d9820a;font-family:monospace">${proximas.length}</div><div style="font-size:12px;color:#664d03;text-transform:uppercase;font-weight:600">Vencem em 30 dias</div></div>` : ""}
+  </div>
+  <div style="padding:28px 32px">
+    ${blocoUtil("Manutenções Vencidas — Ação Imediata","#c8253d","⛔",vencidas)}
+    ${blocoUtil("Vencendo em Breve — Atenção","#d9820a","⚠️",proximas)}
+  </div>
+  <div style="padding:20px 32px;background:#f7f8fa;border-top:1px solid #e2e6ea;text-align:center">
+    <p style="font-size:12px;color:#8e97a6;margin:0">Gerado automaticamente pelo sistema Utilidades. Não responda.</p>
+  </div>
+</div></body></html>`;
+
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": apiKey },
+      body: JSON.stringify({
+        sender: { name: "Utilidades Alertas", email: from },
+        to: dests.map(email => ({ email })),
+        subject: `⚠ Utilidades · Alerta de Manutenção — ${assuntoParts.join(" | ")}`,
+        htmlContent: htmlEmail,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Erro na API Brevo");
+    mostrarToast(`✅ E-mail enviado para ${dests.length} destinatário(s)!`, "green");
+  } catch(err) {
+    mostrarToast(`❌ Erro: ${err.message}`, "red");
+  } finally {
+    btn.textContent = "🚨 Disparar alertas agora"; btn.disabled = false;
+  }
 }
 
 /* ════════════════════════════════════════
