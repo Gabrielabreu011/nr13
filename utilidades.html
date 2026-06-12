@@ -71,6 +71,43 @@
 
     /* tabela desta página: min-width menor pois tem mais colunas */
     #utilTable { min-width:1300px; }
+
+    /* ── Hambúrguer / collapse do formulário ── */
+    .form-toggle-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      background:none; border:none; cursor:pointer;
+      font-family:'IBM Plex Sans',sans-serif;
+      font-size:15px; font-weight:600; color:var(--text);
+      padding:0; transition:color .2s;
+    }
+    .form-toggle-btn:hover { color:var(--green); }
+
+    .hamburger {
+      display:flex; flex-direction:column; justify-content:center;
+      gap:4px; width:20px; height:20px;
+    }
+    .hamburger span {
+      display:block; height:2px; border-radius:2px;
+      background:currentColor;
+      transition:transform .3s, opacity .3s, width .3s;
+    }
+    .hamburger span:nth-child(1) { width:20px; }
+    .hamburger span:nth-child(2) { width:14px; }
+    .hamburger span:nth-child(3) { width:20px; }
+
+    .form-toggle-btn.open .hamburger span:nth-child(1) { transform:translateY(6px) rotate(45deg); width:20px; }
+    .form-toggle-btn.open .hamburger span:nth-child(2) { opacity:0; }
+    .form-toggle-btn.open .hamburger span:nth-child(3) { transform:translateY(-6px) rotate(-45deg); width:20px; }
+
+    .form-body {
+      overflow:hidden;
+      transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .3s;
+      max-height:0; opacity:0;
+    }
+    .form-body.open { max-height:700px; opacity:1; }
+
+    .chevron { font-size:11px; color:var(--text3); transition:transform .3s; }
+    .form-toggle-btn.open .chevron { transform:rotate(180deg); }
   </style>
 </head>
 <body>
@@ -149,13 +186,20 @@
     </p>
   </section>
 
-  <!-- Cadastro -->
+  <!-- Cadastro com hambúrguer -->
   <section class="panel" id="formPanel">
-    <div class="panel-header">
-      <h2>Cadastrar equipamento <span id="formMode"></span></h2>
+    <div class="panel-header" style="cursor:pointer;" onclick="toggleFormUtil()">
+      <button class="form-toggle-btn" id="utilToggleBtn" type="button">
+        <span class="hamburger">
+          <span></span><span></span><span></span>
+        </span>
+        Cadastrar equipamento
+        <span id="formMode" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);font-weight:400;margin-left:4px"></span>
+      </button>
+      <span class="chevron">▼</span>
     </div>
-
-    <!-- ID único no grid para sobrescrever o auto-fit do style.css -->
+    <div class="form-body" id="utilFormBody">
+    <div style="padding:20px 0 0">
     <div class="form-grid" id="utilFormGrid">
 
       <div class="field">
@@ -235,6 +279,8 @@
       <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
       <button class="btn btn-ghost" id="btnCancelar" onclick="cancelarEdicao()" style="display:none">✕ Cancelar</button>
     </div>
+    </div><!-- /padding -->
+    </div><!-- /form-body -->
   </section>
 
   <!-- Lista -->
@@ -461,6 +507,18 @@ function cancelarEdicao() {
   document.getElementById("btnCancelar").style.display = "none";
 }
 
+/* ── Hambúrguer Utilidades ── */
+function toggleFormUtil(forceOpen) {
+  const body = document.getElementById("utilFormBody");
+  const btn  = document.getElementById("utilToggleBtn");
+  const isOpen = body.classList.contains("open");
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+  body.classList.toggle("open", shouldOpen);
+  btn.classList.toggle("open", shouldOpen);
+  const chev = btn.closest(".panel").querySelector(".chevron");
+  if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
+}
+
 function iniciarEdicao(item) {
   editandoId = item.id;
   document.getElementById("f-nome").value   = item.nome;
@@ -478,6 +536,7 @@ function iniciarEdicao(item) {
   document.getElementById("btnSubmit").textContent     = "✔ Salvar alterações";
   document.getElementById("btnCancelar").style.display = "inline-flex";
   document.getElementById("formPanel").scrollIntoView({ behavior:"smooth", block:"start" });
+  toggleFormUtil(true);
 }
 
 function shake(el) {
