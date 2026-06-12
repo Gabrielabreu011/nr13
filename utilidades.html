@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Firebase (mesmo projeto do index.html) -->
+  <!-- Firebase — mesmo projeto -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -24,50 +24,58 @@
   </script>
 
   <style>
-    /* ── Estilos extras desta página (não conflitam com style.css) ── */
-
-    /* Nav pills no header */
-    .nav-pills { display: flex; gap: 8px; align-items: center; }
+    /* ── Nav pills no header ── */
+    .nav-pills { display:flex; gap:8px; align-items:center; }
 
     .nav-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 999px;
-      font-size: 12px; font-weight: 600; text-decoration: none;
-      font-family: 'IBM Plex Sans', sans-serif;
-      border: 1px solid transparent;
-      transition: opacity .15s, background .15s;
-      white-space: nowrap;
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 14px; border-radius:999px;
+      font-size:12px; font-weight:600; text-decoration:none;
+      font-family:'IBM Plex Sans',sans-serif;
+      border:1px solid transparent;
+      transition:opacity .15s, background .15s;
+      white-space:nowrap;
     }
-    .nav-pill:hover { opacity: .82; }
-
     .nav-pill.inactive {
-      background: rgba(255,255,255,.18);
-      color: white;
-      border-color: rgba(255,255,255,.25);
+      background:rgba(255,255,255,.18); color:#fff;
+      border-color:rgba(255,255,255,.25);
     }
+    .nav-pill.inactive:hover { background:rgba(255,255,255,.28); }
     .nav-pill.active {
-      background: white;
-      color: var(--green, #157347);
-      border-color: white;
+      background:#fff; color:var(--green);
+      border-color:#fff;
     }
 
-    /* Badges de tipo na tabela */
+    /* ── Form grid FIXO para esta página (sobrescreve o auto-fit do style.css) ── */
+    #utilFormGrid {
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:14px;
+    }
+    @media(max-width:1100px){ #utilFormGrid { grid-template-columns: repeat(3,1fr); } }
+    @media(max-width:700px) { #utilFormGrid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:460px) { #utilFormGrid { grid-template-columns: 1fr; } }
+
+    /* ── Badges de tipo na tabela ── */
     .type-badge {
-      display: inline-block; padding: 2px 9px; border-radius: 6px;
-      font-size: 11px; font-weight: 600;
-      font-family: 'IBM Plex Mono', monospace;
-      border: 1px solid;
+      display:inline-block; padding:2px 9px; border-radius:6px;
+      font-size:11px; font-weight:600;
+      font-family:'IBM Plex Mono',monospace;
+      border:1px solid;
     }
-    .type-beb  { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
-    .type-ac   { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+    .type-beb { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+    .type-ac  { background:#ede9fe; color:#5b21b6; border-color:#c4b5fd; }
 
-    /* Linhas da tabela — hover igual ao style.css original */
-    [data-theme="dark"] .type-beb { background: #1e3a5f; color: #93c5fd; border-color: #1e40af; }
-    [data-theme="dark"] .type-ac  { background: #2e1a4a; color: #c4b5fd; border-color: #5b21b6; }
+    [data-theme="dark"] .type-beb { background:#1e3a5f; color:#93c5fd; border-color:#1e40af; }
+    [data-theme="dark"] .type-ac  { background:#2e1a4a; color:#c4b5fd; border-color:#5b21b6; }
+
+    /* tabela desta página: min-width menor pois tem mais colunas */
+    #utilTable { min-width:1300px; }
   </style>
 </head>
 <body>
 
+<!-- ═══════ HEADER ═══════ -->
 <header>
   <div class="logo">
     <div class="logo-badge">UTIL</div>
@@ -77,10 +85,9 @@
     </div>
   </div>
   <div class="header-right">
-    <!-- Navegação entre páginas -->
     <nav class="nav-pills">
-      <a href="index.html"       class="nav-pill inactive">⚙️ NR-13</a>
-      <a href="utilidades.html"  class="nav-pill active">🌡️ Utilidades</a>
+      <a href="index.html"      class="nav-pill inactive">⚙️ NR-13</a>
+      <a href="utilidades.html" class="nav-pill active">🌡️ Utilidades</a>
     </nav>
     <button class="theme-toggle" id="themeBtn" title="Alternar tema">🌙</button>
   </div>
@@ -98,8 +105,8 @@
 
   <!-- Alertas -->
   <div class="alertas">
-    <div id="alertaDanger" class="alerta alerta-red"   style="display:none"><span class="blink">⚠</span><span id="alertaDangerTxt"></span></div>
-    <div id="alertaWarn"   class="alerta alerta-yellow" style="display:none"><span>⏰</span><span id="alertaWarnTxt"></span></div>
+    <div id="alertaDanger" class="alerta alerta-red"><span class="blink">⚠</span><span id="alertaDangerTxt"></span></div>
+    <div id="alertaWarn"   class="alerta alerta-yellow"><span>⏰</span><span id="alertaWarnTxt"></span></div>
   </div>
 
   <!-- Cadastro -->
@@ -107,7 +114,9 @@
     <div class="panel-header">
       <h2>Cadastrar equipamento <span id="formMode"></span></h2>
     </div>
-    <div class="form-grid">
+
+    <!-- ID único no grid para sobrescrever o auto-fit do style.css -->
+    <div class="form-grid" id="utilFormGrid">
 
       <div class="field">
         <label>Equipamento</label>
@@ -180,7 +189,7 @@
         </select>
       </div>
 
-    </div><!-- /form-grid -->
+    </div><!-- /utilFormGrid -->
 
     <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
       <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
@@ -215,7 +224,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table>
+      <table id="utilTable">
         <thead><tr>
           <th>Equipamento</th>
           <th>TAG</th>
@@ -237,7 +246,7 @@
 
 </main>
 
-<!-- Modal (mesmo padrão do index.html) -->
+<!-- Modal — usa .open igual ao script.js / style.css do site -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -253,36 +262,30 @@
 </div>
 
 <script>
-/* ════════════════════════════════════════════════
-   TEMA — idêntico ao script.js do index.html
-════════════════════════════════════════════════ */
-const root = document.documentElement;
-
-function aplicarTema(tema) {
-  root.setAttribute("data-theme", tema);
-  document.getElementById("themeBtn").textContent = tema === "dark" ? "☀️" : "🌙";
-  localStorage.setItem("tema", tema);
+/* ════════════════════════════════════════
+   TEMA — usa a mesma chave "nr13_tema"
+   do script.js original para sincronizar
+════════════════════════════════════════ */
+function aplicarTema() {
+  const t = localStorage.getItem("nr13_tema") || "light";
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
 }
-
 document.getElementById("themeBtn").addEventListener("click", () => {
-  aplicarTema(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const novo   = isDark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", novo);
+  document.getElementById("themeBtn").textContent = novo === "dark" ? "☀️" : "🌙";
+  localStorage.setItem("nr13_tema", novo);
 });
+aplicarTema();
 
-// Sincroniza com o tema salvo pelo index.html
-aplicarTema(localStorage.getItem("tema") || "light");
-
-
-/* ════════════════════════════════════════════════
+/* ════════════════════════════════════════
    CONSTANTES DE TIPO
-════════════════════════════════════════════════ */
-const TIPOS_BEB = [
-  "Bebedouro de pressão","Bebedouro de coluna",
-  "Purificador de água","Bebedouro industrial"
-];
-const TIPOS_AC = [
-  "Split hi-wall","Split cassete","Split piso-teto",
-  "VRF / VRV","Janela","Self-contained"
-];
+════════════════════════════════════════ */
+const TIPOS_BEB = ["Bebedouro de pressão","Bebedouro de coluna","Purificador de água","Bebedouro industrial"];
+const TIPOS_AC  = ["Split hi-wall","Split cassete","Split piso-teto","VRF / VRV","Janela","Self-contained"];
+const DIAS_ALERTA = 30;
 
 function categoriaDe(tipo) {
   if (TIPOS_BEB.includes(tipo)) return "beb";
@@ -311,83 +314,97 @@ function onTipoChange() {
   }
 }
 
-
-/* ════════════════════════════════════════════════
-   FIREBASE — coleção separada "utilidades"
-════════════════════════════════════════════════ */
-const COL = db.collection("utilidades");
+/* ════════════════════════════════════════
+   FIRESTORE — coleção "utilidades"
+════════════════════════════════════════ */
+const COL = window.db.collection("utilidades");
+let utilItems  = [];
 let editandoId = null;
+let modalCallback = null;
 
-// Escuta em tempo real (igual ao padrão Firestore do script.js)
+// Escuta em tempo real — mesmo padrão do script.js
 COL.orderBy("nome").onSnapshot(snap => {
-  window._util = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  utilItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderizar();
-}, err => console.error("Firestore:", err));
+}, err => {
+  console.error("Firestore:", err);
+  mostrarToast("Erro ao conectar ao banco de dados.", "red");
+});
 
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("busca").addEventListener("input",  renderizar);
+  document.getElementById("filtroStatus").addEventListener("change", renderizar);
+  document.getElementById("filtroCateg").addEventListener("change",  renderizar);
+  document.getElementById("modalOverlay").addEventListener("click", e => {
+    if (e.target === e.currentTarget) fecharModal();
+  });
+});
 
-/* ════════════════════════════════════════════════
+/* ════════════════════════════════════════
    UTILS DE DATA
-════════════════════════════════════════════════ */
-function proximaData(ultima, meses) {
+════════════════════════════════════════ */
+function calcularProxima(ultima, meses) {
   const d = new Date(ultima + "T00:00:00");
   d.setMonth(d.getMonth() + meses);
   return d;
 }
-
-function diasAte(d) {
+function calcularDias(d) {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const alvo = new Date(d); alvo.setHours(0,0,0,0);
   return Math.ceil((alvo - hoje) / 86400000);
 }
-
-function fmtData(d) {
-  return new Date(d).toLocaleDateString("pt-BR");
-}
+function fmtData(d) { return new Date(d).toLocaleDateString("pt-BR"); }
 
 function calcStatus(item) {
-  if (item.status === "desativado") return { cls:"off",    txt:"Desativado" };
-  const prox = proximaData(item.ultima, item.periodo);
-  const dias = diasAte(prox);
-  if (dias < 0)      return { cls:"danger", txt:"Vencida",             dias };
-  if (dias <= 30)    return { cls:"warn",   txt:"Vence em breve",      dias };
-                     return { cls:"ok",     txt:"Dentro da validade",  dias };
+  if (item.status === "desativado") return { cls:"off",    txt:"DESATIVADO" };
+  const prox = calcularProxima(item.ultima, item.periodo);
+  const dias = calcularDias(prox);
+  if (dias < 0)            return { cls:"danger", txt:"VENCIDA",          dias };
+  if (dias <= DIAS_ALERTA) return { cls:"warn",   txt:"VENCE EM BREVE",   dias };
+                           return { cls:"ok",     txt:"DENTRO DA VALIDADE", dias };
 }
 
-
-/* ════════════════════════════════════════════════
+/* ════════════════════════════════════════
    FORMULÁRIO
-════════════════════════════════════════════════ */
+════════════════════════════════════════ */
 function submitForm() {
-  const nome    = document.getElementById("f-nome").value.trim();
-  const tag     = document.getElementById("f-tag").value.trim();
-  const modelo  = document.getElementById("f-modelo").value.trim();
-  const tipo    = document.getElementById("f-tipo").value;
-  const local   = document.getElementById("f-local").value.trim();
-  const ultima  = document.getElementById("f-ultima").value;
-  const periodo = Number(document.getElementById("f-periodo").value);
-  const servico = document.getElementById("f-servico").value;
-  const resp    = document.getElementById("f-resp").value.trim();
-  const status  = document.getElementById("f-status").value;
-
-  if (!nome || !tag || !modelo || !tipo || !local || !ultima || !periodo || !resp) {
-    alert("Preencha todos os campos obrigatórios.");
-    return;
+  const ids = ["f-nome","f-tag","f-modelo","f-tipo","f-local","f-ultima","f-periodo","f-resp"];
+  for (const id of ids) {
+    if (!document.getElementById(id).value.toString().trim()) {
+      document.getElementById(id).focus();
+      shake(document.getElementById(id));
+      return;
+    }
   }
-
-  const payload = { nome, tag, modelo, tipo, local, ultima, periodo, servico, resp, status };
+  const payload = {
+    nome:    document.getElementById("f-nome").value.trim(),
+    tag:     document.getElementById("f-tag").value.trim(),
+    modelo:  document.getElementById("f-modelo").value.trim(),
+    tipo:    document.getElementById("f-tipo").value,
+    local:   document.getElementById("f-local").value.trim(),
+    ultima:  document.getElementById("f-ultima").value,
+    periodo: Number(document.getElementById("f-periodo").value),
+    servico: document.getElementById("f-servico").value,
+    resp:    document.getElementById("f-resp").value.trim(),
+    status:  document.getElementById("f-status").value,
+    atualizadoEm: new Date().toISOString(),
+  };
 
   if (editandoId) {
     COL.doc(editandoId).update(payload)
-      .then(() => { cancelarEdicao(); })
-      .catch(e => alert("Erro ao salvar: " + e.message));
+      .then(() => { mostrarToast("Equipamento atualizado!", "green"); cancelarEdicao(); })
+      .catch(e  => mostrarToast("Erro ao salvar: " + e.message, "red"));
   } else {
     COL.add(payload)
-      .then(() => { limparFormulario(); })
-      .catch(e => alert("Erro ao adicionar: " + e.message));
+      .then(() => { mostrarToast("Equipamento adicionado!", "green"); resetForm(); })
+      .catch(e  => mostrarToast("Erro ao adicionar: " + e.message, "red"));
   }
 }
 
-function limparFormulario() {
+function resetForm() {
   ["f-nome","f-tag","f-modelo","f-local","f-ultima","f-periodo","f-resp"]
     .forEach(id => document.getElementById(id).value = "");
   document.getElementById("f-tipo").value   = "";
@@ -397,9 +414,9 @@ function limparFormulario() {
 
 function cancelarEdicao() {
   editandoId = null;
-  limparFormulario();
-  document.getElementById("formMode").textContent    = "";
-  document.getElementById("btnSubmit").textContent   = "＋ Adicionar";
+  resetForm();
+  document.getElementById("formMode").textContent      = "";
+  document.getElementById("btnSubmit").textContent     = "＋ Adicionar";
   document.getElementById("btnCancelar").style.display = "none";
 }
 
@@ -416,61 +433,57 @@ function iniciarEdicao(item) {
   document.getElementById("f-servico").value = item.servico;
   document.getElementById("f-resp").value    = item.resp;
   document.getElementById("f-status").value  = item.status || "ativo";
-  document.getElementById("formMode").textContent      = "— editando";
-  document.getElementById("btnSubmit").textContent     = "✓ Salvar alterações";
+  document.getElementById("formMode").textContent      = "· editando";
+  document.getElementById("btnSubmit").textContent     = "✔ Salvar alterações";
   document.getElementById("btnCancelar").style.display = "inline-flex";
-  document.getElementById("formPanel").scrollIntoView({ behavior:"smooth" });
+  document.getElementById("formPanel").scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
-
-/* ════════════════════════════════════════════════
-   EXCLUSÃO (com modal igual ao index.html)
-════════════════════════════════════════════════ */
-let _pendingDelete = null;
-
-function confirmarExclusao(id, nome) {
-  _pendingDelete = id;
-  document.getElementById("modalTitle").textContent = "Excluir equipamento";
-  document.getElementById("modalMsg").textContent   = `Deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
-  document.getElementById("modalConfirmBtn").onclick = executarExclusao;
-  document.getElementById("modalOverlay").classList.add("show");
+function shake(el) {
+  el.style.transition = "transform .1s";
+  el.style.transform  = "translateX(-6px)";
+  setTimeout(() => { el.style.transform = "translateX(6px)"; }, 100);
+  setTimeout(() => { el.style.transform = "translateX(0)"; el.style.transition = ""; }, 200);
 }
 
-function executarExclusao() {
-  if (!_pendingDelete) return;
-  COL.doc(_pendingDelete).delete()
-    .then(() => fecharModal())
-    .catch(e => alert("Erro ao excluir: " + e.message));
+/* ════════════════════════════════════════
+   AÇÕES
+════════════════════════════════════════ */
+function excluirItem(id) {
+  const item = utilItems.find(i => i.id === id);
+  abrirModal("Excluir equipamento",
+    `Deseja realmente excluir <strong>${item?.nome}</strong>?`,
+    () => COL.doc(id).delete().then(() => mostrarToast("Excluído.", "green"))
+          .catch(e => mostrarToast(e.message, "red"))
+  );
 }
 
-function fecharModal() {
-  document.getElementById("modalOverlay").classList.remove("show");
-  _pendingDelete = null;
+function desativarItem(id) {
+  const item = utilItems.find(i => i.id === id);
+  abrirModal("Desativar equipamento",
+    `Confirma a desativação de <strong>${item?.nome}</strong>?`,
+    () => COL.doc(id).update({ status:"desativado" })
+  );
+}
+
+function reativarItem(id) {
+  COL.doc(id).update({ status:"ativo" })
+    .then(() => mostrarToast("Equipamento reativado!", "green"))
+    .catch(e  => mostrarToast(e.message, "red"));
 }
 
 function apagarTudo() {
-  if (!window._util || !window._util.length) { alert("Nenhum dado para apagar."); return; }
-  document.getElementById("modalTitle").textContent = "Apagar tudo";
-  document.getElementById("modalMsg").textContent   = `Apagar TODOS os ${window._util.length} equipamentos? Esta ação não pode ser desfeita.`;
-  document.getElementById("modalConfirmBtn").onclick = async () => {
-    const batch = db.batch();
-    window._util.forEach(i => batch.delete(COL.doc(i.id)));
-    await batch.commit();
-    fecharModal();
-  };
-  document.getElementById("modalOverlay").classList.add("show");
+  if (!utilItems.length) { mostrarToast("Nenhum dado para apagar.", "yellow"); return; }
+  abrirModal("Apagar todos os registros",
+    `Esta ação irá remover <strong>todos os ${utilItems.length} equipamentos</strong> permanentemente. Tem certeza?`,
+    async () => {
+      const batch = window.db.batch();
+      utilItems.forEach(i => batch.delete(COL.doc(i.id)));
+      await batch.commit();
+      mostrarToast("Todos os registros apagados.", "green");
+    }
+  );
 }
-
-
-/* ════════════════════════════════════════════════
-   FILTROS
-════════════════════════════════════════════════ */
-document.addEventListener("DOMContentLoaded", () => {
-  ["busca","filtroStatus","filtroCateg"].forEach(id => {
-    document.getElementById(id).addEventListener("input",  renderizar);
-    document.getElementById(id).addEventListener("change", renderizar);
-  });
-});
 
 function limparFiltros() {
   document.getElementById("busca").value        = "";
@@ -479,93 +492,108 @@ function limparFiltros() {
   renderizar();
 }
 
+/* ════════════════════════════════════════
+   MODAL — usa .open igual ao style.css
+════════════════════════════════════════ */
+function abrirModal(titulo, msg, cb) {
+  document.getElementById("modalTitle").textContent = titulo;
+  document.getElementById("modalMsg").innerHTML     = msg;
+  document.getElementById("modalConfirmBtn").onclick = () => { cb(); fecharModal(); };
+  document.getElementById("modalOverlay").classList.add("open");
+  modalCallback = cb;
+}
+function fecharModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  modalCallback = null;
+}
 
-/* ════════════════════════════════════════════════
+/* ════════════════════════════════════════
    RENDER
-════════════════════════════════════════════════ */
+════════════════════════════════════════ */
 function renderizar() {
-  const items = window._util || [];
-  const busca  = document.getElementById("busca").value.toLowerCase();
-  const fSt    = document.getElementById("filtroStatus").value;
-  const fCat   = document.getElementById("filtroCateg").value;
+  const busca  = (document.getElementById("busca")?.value || "").toLowerCase();
+  const fSt    = document.getElementById("filtroStatus")?.value || "todos";
+  const fCat   = document.getElementById("filtroCateg")?.value  || "todos";
   const tbody  = document.getElementById("tabelaUtil");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
   let ct = { ok:0, warn:0, danger:0, off:0 };
+  let visivel = 0;
 
-  if (!items.length) {
-    tbody.innerHTML = `
-      <tr><td colspan="12" style="text-align:center;padding:52px 20px;color:var(--text3)">
-        <div style="font-size:32px;margin-bottom:10px;opacity:.4">🌡️</div>
-        <div style="font-size:13px">Nenhum equipamento cadastrado ainda.</div>
-      </td></tr>`;
+  if (!utilItems.length) {
+    const tr = document.createElement("tr"); tr.className = "empty-row";
+    tr.innerHTML = `<td colspan="12"><span class="empty-icon">🌡️</span>Nenhum equipamento cadastrado ainda.</td>`;
+    tbody.appendChild(tr);
     atualizarCards(ct); atualizarAlertas(ct); return;
   }
 
-  const filtrados = items.filter(item => {
+  utilItems.forEach((item, i) => {
     const st  = calcStatus(item);
+    ct[st.cls]++;
+
     const cat = categoriaDe(item.tipo);
     const mB  = item.nome.toLowerCase().includes(busca)
               || item.tag.toLowerCase().includes(busca)
               || (item.modelo||"").toLowerCase().includes(busca)
               || (item.local||"").toLowerCase().includes(busca);
-    if (!mB) return false;
-    if (fSt  !== "todos" && fSt  !== st.cls)  return false;
-    if (fCat !== "todos" && fCat !== cat)      return false;
-    return true;
-  });
+    if (!mB)                                    return;
+    if (fSt !== "todos" && fSt !== st.cls)      return;
+    if (fCat !== "todos" && fCat !== cat)        return;
+    visivel++;
 
-  // Contagem total (sem filtro)
-  items.forEach(item => { ct[calcStatus(item).cls]++; });
-
-  document.getElementById("countLabel").textContent =
-    filtrados.length !== items.length
-      ? `(${filtrados.length} de ${items.length})`
-      : `(${items.length})`;
-
-  filtrados.forEach(item => {
-    const st      = calcStatus(item);
-    const cat     = categoriaDe(item.tipo);
-    const prox    = item.status === "desativado" ? "—"
-                  : fmtData(proximaData(item.ultima, item.periodo));
-    const diasCel = item.status === "desativado" ? "—"
-                  : st.dias < 0
-                    ? `<span style="color:var(--red);font-weight:600">${Math.abs(st.dias)} dias vencido</span>`
-                    : `${st.dias} dias`;
+    const proxima  = item.status === "desativado" ? "—"
+                   : fmtData(calcularProxima(item.ultima, item.periodo));
+    const daysClass = st.cls === "off" ? "days-gray"
+                    : st.dias < 0      ? "days-bad"
+                    : st.dias <= 30    ? "days-warn" : "days-ok";
+    const daysText  = st.cls === "off" ? "—"
+                    : st.dias < 0 ? `${Math.abs(st.dias)}d vencido`
+                    : `${st.dias}d`;
     const badgeCls   = cat === "beb" ? "type-beb" : cat === "ac" ? "type-ac" : "";
     const tipoBadge  = `<span class="type-badge ${badgeCls}">${item.tipo}</span>`;
+    const statusCls  = st.cls === "ok" ? "valida" : st.cls === "warn" ? "proxima"
+                     : st.cls === "danger" ? "vencida" : "descomissionado";
 
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${item.nome}</strong></td>
-        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${item.tag}</td>
-        <td style="color:var(--text2)">${item.modelo}</td>
-        <td>${tipoBadge}</td>
-        <td style="color:var(--text2)">${item.local}</td>
-        <td>${fmtData(item.ultima+"T00:00:00")}</td>
-        <td>${prox}</td>
-        <td>${diasCel}</td>
-        <td style="color:var(--text2)">${item.servico}</td>
-        <td style="color:var(--text2)">${item.resp}</td>
-        <td><span class="badge badge-${st.cls}">${st.txt}</span></td>
-        <td>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-yellow btn-sm" onclick='iniciarEdicao(${JSON.stringify(item)})'>✏</button>
-            <button class="btn btn-red    btn-sm" onclick="confirmarExclusao('${item.id}','${item.nome.replace(/'/g,"\\'")}')">🗑</button>
-          </div>
-        </td>
-      </tr>`;
+    const btnAcao = item.status === "desativado"
+      ? `<button class="btn btn-green" style="font-size:11px;padding:6px 10px" onclick="reativarItem('${item.id}')">↩ Reativar</button>`
+      : `<button class="btn" style="font-size:11px;padding:6px 10px;background:var(--gray-bg);color:var(--gray)" onclick="desativarItem('${item.id}')">⊘ Desativar</button>`;
+
+    const tr = document.createElement("tr");
+    tr.className = "row-in";
+    tr.style.animationDelay = `${i * 0.03}s`;
+    tr.innerHTML = `
+      <td><strong style="font-weight:600">${item.nome}</strong></td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--surface2);padding:3px 8px;border-radius:5px;border:1px solid var(--border)">${item.tag}</span></td>
+      <td style="color:var(--text2)">${item.modelo}</td>
+      <td>${tipoBadge}</td>
+      <td>${item.local}</td>
+      <td>${fmtData(item.ultima+"T00:00:00")}</td>
+      <td>${proxima}</td>
+      <td class="days-cell ${daysClass}">${daysText}</td>
+      <td style="color:var(--text2)">${item.servico}</td>
+      <td>${item.resp}</td>
+      <td><span class="status ${statusCls}">${st.txt}</span></td>
+      <td><div class="acoes">
+        <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick='iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏ Editar</button>
+        ${btnAcao}
+        <button class="btn btn-red" style="font-size:11px;padding:6px 10px" onclick="excluirItem('${item.id}')">🗑</button>
+      </div></td>`;
+    tbody.appendChild(tr);
   });
+
+  document.getElementById("countLabel").textContent =
+    visivel !== utilItems.length ? `${visivel} de ${utilItems.length}` : `${utilItems.length}`;
 
   atualizarCards(ct);
   atualizarAlertas(ct);
 }
 
 function atualizarCards(ct) {
-  document.getElementById("totalOk").textContent     = ct.ok;
-  document.getElementById("totalWarn").textContent   = ct.warn;
-  document.getElementById("totalDanger").textContent = ct.danger;
-  document.getElementById("totalOff").textContent    = ct.off;
+  animateCount("totalOk",     ct.ok);
+  animateCount("totalWarn",   ct.warn);
+  animateCount("totalDanger", ct.danger);
+  animateCount("totalOff",    ct.off);
 }
 
 function atualizarAlertas(ct) {
@@ -573,32 +601,71 @@ function atualizarAlertas(ct) {
   const aw = document.getElementById("alertaWarn");
   if (ct.danger > 0) {
     document.getElementById("alertaDangerTxt").textContent =
-      ` ${ct.danger} equipamento(s) com manutenção VENCIDA. Ação imediata necessária.`;
-    ad.style.display = "flex";
-  } else ad.style.display = "none";
+      ` ${ct.danger} equipamento(s) com manutenção VENCIDA — ação imediata necessária.`;
+    ad.classList.add("ativo");
+  } else ad.classList.remove("ativo");
 
   if (ct.warn > 0) {
     document.getElementById("alertaWarnTxt").textContent =
-      ` ${ct.warn} equipamento(s) vence(m) nos próximos 30 dias.`;
-    aw.style.display = "flex";
-  } else aw.style.display = "none";
+      ` ${ct.warn} equipamento(s) vence(m) em até 30 dias.`;
+    aw.classList.add("ativo");
+  } else aw.classList.remove("ativo");
 }
 
+/* ════════════════════════════════════════
+   ANIMATE COUNT — mesmo do script.js
+════════════════════════════════════════ */
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) return;
+  const step = target > current ? 1 : -1;
+  const range = Math.abs(target - current);
+  let v = current;
+  const t = setInterval(() => {
+    v += step; el.textContent = v;
+    if (v === target) clearInterval(t);
+  }, Math.max(20, Math.min(100, range * 10)) / (range + 1));
+}
 
-/* ════════════════════════════════════════════════
+/* ════════════════════════════════════════
+   TOAST — mesmo do script.js
+════════════════════════════════════════ */
+function mostrarToast(msg, tipo = "green") {
+  document.getElementById("util-toast")?.remove();
+  if (!document.getElementById("util-toast-style")) {
+    const s = document.createElement("style"); s.id = "util-toast-style";
+    s.textContent = `@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(12px)}}`;
+    document.head.appendChild(s);
+  }
+  const cores = {
+    green:  { bg:"var(--green-bg)",  border:"var(--green)",  color:"var(--green)" },
+    red:    { bg:"var(--red-bg)",    border:"var(--red)",    color:"var(--red)" },
+    yellow: { bg:"var(--yellow-bg)", border:"var(--yellow)", color:"var(--yellow)" },
+  };
+  const cv = cores[tipo] || cores.green;
+  const t  = document.createElement("div"); t.id = "util-toast";
+  t.style.cssText = `position:fixed;bottom:28px;right:28px;z-index:9999;background:${cv.bg};border:1px solid ${cv.border};color:${cv.color};padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.15);max-width:380px;line-height:1.5;animation:toastIn .3s ease`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.animation = "toastOut .3s ease forwards"; setTimeout(() => t.remove(), 300); }, 4500);
+}
+
+/* ════════════════════════════════════════
    CSV
-════════════════════════════════════════════════ */
+════════════════════════════════════════ */
 function exportarCSV() {
-  const items = window._util || [];
-  if (!items.length) { alert("Nenhum dado para exportar."); return; }
+  if (!utilItems.length) { mostrarToast("Nenhum dado para exportar.", "yellow"); return; }
   let csv = "Equipamento;TAG;Modelo;Tipo;Local;Ultima Manut.;Periodicidade(meses);Servico;Responsavel;Status\n";
-  items.forEach(i => {
+  utilItems.forEach(i => {
     const s = calcStatus(i);
     csv += `${i.nome};${i.tag};${i.modelo};${i.tipo};${i.local};${i.ultima};${i.periodo};${i.servico};${i.resp};${s.txt}\n`;
   });
+  const blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
-  a.download = "utilidades_"+new Date().toISOString().slice(0,10)+".csv";
+  a.href = URL.createObjectURL(blob);
+  a.download = "utilidades_" + new Date().toISOString().slice(0,10) + ".csv";
   a.click();
 }
 </script>
