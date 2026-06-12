@@ -229,6 +229,8 @@ function editarEquipamento(id) {
   document.getElementById("btnCancelar").style.display="inline-flex";
   document.getElementById("formMode").textContent="· editando";
   document.getElementById("formPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  // ── Abre o formulário hambúrguer ao editar ──
+  if (typeof toggleFormNr13 === "function") toggleFormNr13(true);
 }
 
 function excluirEquipamento(id) {
