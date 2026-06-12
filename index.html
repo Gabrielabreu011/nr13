@@ -8,6 +8,50 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
+  <style>
+    /* ── Hambúrguer / collapse do formulário ── */
+    .form-toggle-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      background:none; border:none; cursor:pointer;
+      font-family:'IBM Plex Sans',sans-serif;
+      font-size:15px; font-weight:600; color:var(--text);
+      padding:0; transition:color .2s;
+    }
+    .form-toggle-btn:hover { color:var(--green); }
+
+    .hamburger {
+      display:flex; flex-direction:column; justify-content:center;
+      gap:4px; width:20px; height:20px;
+    }
+    .hamburger span {
+      display:block; height:2px; border-radius:2px;
+      background:currentColor;
+      transition:transform .3s, opacity .3s, width .3s;
+    }
+    .hamburger span:nth-child(1) { width:20px; }
+    .hamburger span:nth-child(2) { width:14px; }
+    .hamburger span:nth-child(3) { width:20px; }
+
+    /* Estado aberto → vira X */
+    .form-toggle-btn.open .hamburger span:nth-child(1) { transform:translateY(6px) rotate(45deg); width:20px; }
+    .form-toggle-btn.open .hamburger span:nth-child(2) { opacity:0; }
+    .form-toggle-btn.open .hamburger span:nth-child(3) { transform:translateY(-6px) rotate(-45deg); width:20px; }
+
+    /* Corpo colapsável */
+    .form-body {
+      overflow:hidden;
+      transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .3s;
+      max-height:0; opacity:0;
+    }
+    .form-body.open { max-height:600px; opacity:1; }
+
+    .chevron {
+      font-size:11px; color:var(--text3);
+      transition:transform .3s;
+    }
+    .form-toggle-btn.open .chevron { transform:rotate(180deg); }
+  </style>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -98,35 +142,46 @@
     </p>
   </section>
 
-  <!-- Cadastro -->
+  <!-- Cadastro com hambúrguer -->
   <section class="panel" id="formPanel">
-    <div class="panel-header">
-      <h2>Cadastrar equipamento <span id="formMode"></span></h2>
+    <div class="panel-header" style="cursor:pointer;" onclick="toggleFormNr13()">
+      <button class="form-toggle-btn" id="nr13ToggleBtn" type="button">
+        <span class="hamburger">
+          <span></span><span></span><span></span>
+        </span>
+        Cadastrar equipamento
+        <span id="formMode" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);font-weight:400;margin-left:4px"></span>
+      </button>
+      <span class="chevron">▼</span>
     </div>
-    <div class="form-grid">
-      <div class="field"><label>Equipamento</label><input type="text" id="equipamento" placeholder="Ex: Compressor"></div>
-      <div class="field"><label>TAG / Código</label><input type="text" id="tag" placeholder="Ex: CP-01"></div>
-      <div class="field"><label>Setor</label><input type="text" id="setor" placeholder="Ex: Utilidades"></div>
-      <div class="field"><label>Tipo NR-13</label>
-        <select id="tipo">
-          <option value="">Selecione</option>
-          <option>Caldeira</option><option>Vaso de pressão</option>
-          <option>Tubulação</option><option>Tanque metálico</option><option>Outro</option>
-        </select>
+    <div class="form-body" id="nr13FormBody">
+      <div style="padding:20px 0 0">
+        <div class="form-grid">
+          <div class="field"><label>Equipamento</label><input type="text" id="equipamento" placeholder="Ex: Compressor"></div>
+          <div class="field"><label>TAG / Código</label><input type="text" id="tag" placeholder="Ex: CP-01"></div>
+          <div class="field"><label>Setor</label><input type="text" id="setor" placeholder="Ex: Utilidades"></div>
+          <div class="field"><label>Tipo NR-13</label>
+            <select id="tipo">
+              <option value="">Selecione</option>
+              <option>Caldeira</option><option>Vaso de pressão</option>
+              <option>Tubulação</option><option>Tanque metálico</option><option>Outro</option>
+            </select>
+          </div>
+          <div class="field"><label>Última inspeção</label><input type="date" id="ultimaInspecao"></div>
+          <div class="field"><label>Validade (meses)</label><input type="number" id="validadeMeses" placeholder="Ex: 12" min="1"></div>
+          <div class="field"><label>Responsável</label><input type="text" id="responsavel" placeholder="Ex: Técnico SST"></div>
+          <div class="field"><label>Status inicial</label>
+            <select id="statusInicial">
+              <option value="ativo">Ativo</option>
+              <option value="descomissionado">Descomissionado</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+          <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
+          <button class="btn btn-ghost" id="btnCancelar" onclick="cancelarEdicao()" style="display:none">✕ Cancelar</button>
+        </div>
       </div>
-      <div class="field"><label>Última inspeção</label><input type="date" id="ultimaInspecao"></div>
-      <div class="field"><label>Validade (meses)</label><input type="number" id="validadeMeses" placeholder="Ex: 12" min="1"></div>
-      <div class="field"><label>Responsável</label><input type="text" id="responsavel" placeholder="Ex: Técnico SST"></div>
-      <div class="field"><label>Status inicial</label>
-        <select id="statusInicial">
-          <option value="ativo">Ativo</option>
-          <option value="descomissionado">Descomissionado</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-      <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
-      <button class="btn btn-ghost" id="btnCancelar" onclick="cancelarEdicao()" style="display:none">✕ Cancelar</button>
     </div>
   </section>
 
@@ -184,6 +239,21 @@
     </div>
   </div>
 </div>
+
+<script>
+/* ── Hambúrguer NR-13 ── */
+function toggleFormNr13(forceOpen) {
+  const body = document.getElementById("nr13FormBody");
+  const btn  = document.getElementById("nr13ToggleBtn");
+  const isOpen = body.classList.contains("open");
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+  body.classList.toggle("open", shouldOpen);
+  btn.classList.toggle("open", shouldOpen);
+  // atualiza chevron no panel-header
+  const chev = btn.closest(".panel").querySelector(".chevron");
+  if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
+}
+</script>
 
 <script src="script.js"></script>
 </body>
