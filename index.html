@@ -104,6 +104,11 @@
     </div>
   </div>
   <div class="header-right">
+    <label class="compact-toggle">
+      <input type="checkbox" id="compactToggle" onchange="toggleCompact()">
+      <span class="switch"></span>
+      Modo compacto
+    </label>
     <nav style="display:flex;gap:8px;align-items:center;">
       <a href="index.html"      style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;background:white;color:var(--green);border:1px solid white;">⚙️ NR-13</a>
       <a href="utilidades.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;background:rgba(255,255,255,.18);color:white;border:1px solid rgba(255,255,255,.25);">🌡️ Utilidades</a>
@@ -248,11 +253,11 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table style="min-width:1550px">
+      <table style="min-width:1450px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th><th>TAG</th><th>Setor</th><th>Tipo NR-13</th>
           <th>Última inspeção</th><th>Próxima inspeção</th><th>Dias restantes</th>
-          <th>Responsável</th><th>Status</th><th>Laudo</th><th>Ações</th>
+          <th>Responsável</th><th>Status</th><th style="width:50px">📄</th><th>Ações</th>
         </tr></thead>
         <tbody id="tabelaEquipamentos"></tbody>
       </table>
@@ -315,6 +320,20 @@ function toggleFormNr13(forceOpen) {
   const chev = btn.closest(".panel").querySelector(".chevron");
   if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
 }
+
+/* ── Modo compacto ── */
+function toggleCompact() {
+  const on = document.getElementById("compactToggle").checked;
+  document.body.classList.toggle("compact", on);
+  localStorage.setItem("nr13_compact", on ? "1" : "0");
+}
+(function() {
+  const on = localStorage.getItem("nr13_compact") === "1";
+  document.body.classList.toggle("compact", on);
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("compactToggle").checked = on;
+  });
+})();
 </script>
 
 <script src="script.js"></script>
