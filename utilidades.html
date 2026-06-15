@@ -71,7 +71,7 @@
     [data-theme="dark"] .type-ac  { background:#2e1a4a; color:#c4b5fd; border-color:#5b21b6; }
 
     /* tabela desta página: min-width menor pois tem mais colunas */
-    #utilTable { min-width:1350px; }
+    #utilTable { min-width:1450px; }
 
     /* ── Hambúrguer / collapse do formulário ── */
     .form-toggle-btn {
@@ -110,23 +110,30 @@
     .chevron { font-size:11px; color:var(--text3); transition:transform .3s; }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Botões de ação compactos (somente ícones) ── */
-    .acoes-icon { display:flex; gap:5px; flex-wrap:nowrap; }
+    /* ── Botões de ação organizados (grid 2x2) ── */
+    .acoes-grid {
+      display:grid;
+      grid-template-columns:repeat(2, auto);
+      gap:5px;
+    }
 
-    .icon-btn {
-      width:30px; height:30px;
+    .act-btn {
+      display:flex; align-items:center; justify-content:center; gap:5px;
+      height:28px; padding:0 9px;
       border:1px solid var(--border);
       background:var(--surface2);
       border-radius:6px;
       cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      font-size:13px; color:var(--text2);
-      transition:background .15s, border-color .15s;
-      flex-shrink:0;
+      font-family:'IBM Plex Sans',sans-serif;
+      font-size:11px; font-weight:600;
+      color:var(--text2);
+      white-space:nowrap;
+      transition:background .15s, border-color .15s, color .15s;
     }
-    .icon-btn:hover { background:var(--border); }
-    .icon-btn.danger:hover { background:var(--red-bg); border-color:var(--red); color:var(--red); }
-    .icon-btn.success:hover { background:var(--green-bg); border-color:var(--green); color:var(--green); }
+    .act-btn:hover { background:var(--border); color:var(--text); }
+    .act-btn.danger:hover  { background:var(--red-bg);   border-color:var(--red);   color:var(--red); }
+    .act-btn.success:hover { background:var(--green-bg); border-color:var(--green); color:var(--green); }
+    .act-btn.warn:hover    { background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow); }
   </style>
 </head>
 <body>
@@ -343,7 +350,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table id="utilTable" style="min-width:1350px">
+      <table id="utilTable" style="min-width:1450px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th>
           <th>TAG</th>
@@ -711,8 +718,8 @@ function renderizar() {
                      : st.cls === "danger" ? "vencida" : "descomissionado";
 
     const ativaBtn = item.status === "desativado"
-      ? `<button class="icon-btn success" title="Reativar" onclick="reativarItem('${item.id}')">↩</button>`
-      : `<button class="icon-btn" title="Desativar" onclick="desativarItem('${item.id}')">⊘</button>`;
+      ? `<button class="act-btn success" onclick="reativarItem('${item.id}')">↩ Reativar</button>`
+      : `<button class="act-btn warn" onclick="desativarItem('${item.id}')">⊘ Desativar</button>`;
     const laudoCell = item.laudoUrl
       ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
       : `<span style="color:var(--text3)">—</span>`;
@@ -734,11 +741,11 @@ function renderizar() {
       <td><span class="status ${statusCls}">${st.txt}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <div class="acoes-icon">
-          <button class="icon-btn" title="Editar" onclick='iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏</button>
-          <button class="icon-btn" title="Histórico" onclick="abrirHistorico('${item.id}')">📋</button>
+        <div class="acoes-grid">
+          <button class="act-btn" onclick='iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏ Editar</button>
+          <button class="act-btn" onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
           ${ativaBtn}
-          <button class="icon-btn danger" title="Excluir" onclick="excluirItem('${item.id}')">🗑</button>
+          <button class="act-btn danger" onclick="excluirItem('${item.id}')">🗑 Excluir</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
