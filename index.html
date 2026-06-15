@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
   <style>
     /* ── Hambúrguer / collapse do formulário ── */
@@ -96,6 +97,19 @@
     <div class="card"><h3>Descomissionados</h3><div class="card-num" id="totalDescom">0</div></div>
   </section>
 
+  <!-- Dashboard -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>📊 Visão geral</h2>
+    </div>
+    <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">
+      <div style="position:relative;width:200px;height:200px;flex-shrink:0">
+        <canvas id="chartNr13"></canvas>
+      </div>
+      <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px" id="chartLegendNr13"></div>
+    </div>
+  </section>
+
   <!-- Alertas -->
   <div class="alertas">
     <div id="alertaVencidas" class="alerta alerta-red"><span class="blink">⚠</span><span id="alertaVencidasTxt"></span></div>
@@ -173,6 +187,7 @@
               <option value="descomissionado">Descomissionado</option>
             </select>
           </div>
+          <div class="field" style="grid-column:1/-1"><label>Link do laudo / foto (opcional)</label><input type="url" id="laudoUrl" placeholder="https://drive.google.com/..."></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
           <button class="btn btn-green" id="btnSubmit" onclick="submitForm()">＋ Adicionar</button>
@@ -213,7 +228,7 @@
         <thead><tr>
           <th>Equipamento</th><th>TAG</th><th>Setor</th><th>Tipo NR-13</th>
           <th>Última inspeção</th><th>Próxima inspeção</th><th>Dias restantes</th>
-          <th>Responsável</th><th>Status</th><th>Ações</th>
+          <th>Responsável</th><th>Status</th><th>Laudo</th><th>Ações</th>
         </tr></thead>
         <tbody id="tabelaEquipamentos"></tbody>
       </table>
