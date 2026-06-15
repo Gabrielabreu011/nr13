@@ -52,10 +52,10 @@
     }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Menu de ações (☰ dropdown) ── */
-    .actions-menu { position:relative; display:inline-block; }
+    /* ── Menu de ações (☰ dropdown via details/summary) ── */
+    .actions-menu { position:relative; }
 
-    .actions-menu-btn {
+    .actions-menu summary {
       width:34px; height:34px;
       border:1px solid var(--border);
       background:var(--surface2);
@@ -63,22 +63,23 @@
       cursor:pointer;
       display:flex; align-items:center; justify-content:center;
       font-size:15px; color:var(--text2);
-      transition:background .2s, border-color .2s;
+      list-style:none;
+      user-select:none;
     }
-    .actions-menu-btn:hover { background:var(--border); }
+    .actions-menu summary::-webkit-details-marker { display:none; }
+    .actions-menu summary:hover { background:var(--border); }
+    .actions-menu[open] summary { background:var(--border); }
 
     .actions-menu-dropdown {
       position:absolute; right:0; top:calc(100% + 6px);
-      background:var(--surface) !important;
-      background-color:var(--surface) !important;
+      background:var(--surface);
       border:1px solid var(--border);
-      border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5), 0 0 0 1px var(--border);
+      border-radius:8px;
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
       min-width:170px; padding:6px;
-      display:none; flex-direction:column; gap:2px;
-      z-index:9999;
-      isolation:isolate;
+      display:flex; flex-direction:column; gap:2px;
+      z-index:200;
     }
-    .actions-menu-dropdown.open { display:flex; }
 
     .actions-menu-dropdown button {
       display:flex; align-items:center; gap:10px;
@@ -94,6 +95,11 @@
     .actions-menu-dropdown button.danger:hover { background:var(--red-bg); }
     .actions-menu-dropdown hr {
       border:none; border-top:1px solid var(--border); margin:4px 0;
+    }
+
+    /* Permite o dropdown "vazar" para fora da tabela */
+    .table-wrapper:has(.actions-menu[open]) {
+      overflow:visible;
     }
   </style>
 
@@ -335,34 +341,12 @@ function toggleFormNr13(forceOpen) {
   if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
 }
 
-/* ── Menu de ações ☰ (dropdown) ── */
-function closeAllMenus() {
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
-    d.classList.remove("open");
-    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = ""; d.style.width = "";
+/* ── Fecha menus <details> ao clicar fora ── */
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".actions-menu[open]").forEach(d => {
+    if (!d.contains(e.target)) d.removeAttribute("open");
   });
-}
-function toggleActionsMenu(id, ev) {
-  ev.stopPropagation();
-  const dropdown = document.getElementById("menu-" + id);
-  const isOpen = dropdown.classList.contains("open");
-  closeAllMenus();
-  if (!isOpen) {
-    const btn = ev.currentTarget;
-    const rect = btn.getBoundingClientRect();
-    const menuWidth = 180;
-    let left = rect.right - menuWidth;
-    if (left < 8) left = 8;
-    dropdown.style.position = "fixed";
-    dropdown.style.top   = (rect.bottom + 6) + "px";
-    dropdown.style.left  = left + "px";
-    dropdown.style.right = "auto";
-    dropdown.style.width = menuWidth + "px";
-    dropdown.classList.add("open");
-  }
-}
-document.addEventListener("click", closeAllMenus);
-document.addEventListener("scroll", closeAllMenus, true);
+});
 </script>
 
 <script src="script.js"></script>
