@@ -163,9 +163,9 @@ function renderizarTabela() {
       : `<span style="color:var(--text3);font-size:12px">—</span>`;
 
     const isDescom = status.classe === "descomissionado";
-    const descomBtn = isDescom
-      ? `<button class="act-btn success" onclick="reativar('${item.id}')">↩ Reativar</button>`
-      : `<button class="act-btn warn" onclick="descomissionar('${item.id}')">⊘ Descom.</button>`;
+    const descomOpt = isDescom
+      ? `<option value="reativar">↩ Reativar</option>`
+      : `<option value="descom">⊘ Descomissionar</option>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
@@ -181,12 +181,13 @@ function renderizarTabela() {
       <td><span class="status ${status.classe}">${status.texto}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <div class="acoes-grid">
-          <button class="act-btn" onclick="editarEquipamento('${item.id}')">✏ Editar</button>
-          <button class="act-btn" onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
-          ${descomBtn}
-          <button class="act-btn danger" onclick="excluirEquipamento('${item.id}')">🗑 Excluir</button>
-        </div>
+        <select class="acoes-select" onchange="executarAcaoNr13('${item.id}', this.value); this.value='';">
+          <option value="" selected disabled>Ações ▾</option>
+          <option value="editar">✏ Editar</option>
+          <option value="historico">📋 Histórico</option>
+          ${descomOpt}
+          <option value="excluir" class="danger">🗑 Excluir</option>
+        </select>
       </td>`;
     tabela.appendChild(tr);
   });
@@ -264,6 +265,17 @@ function atualizarAlertas(vencidas, proximas) {
 }
 
 // ── AÇÕES ──
+// ── DISPATCHER DO SELECT DE AÇÕES ──
+function executarAcaoNr13(id, acao) {
+  switch (acao) {
+    case "editar":    editarEquipamento(id); break;
+    case "historico": abrirHistorico(id);    break;
+    case "descom":    descomissionar(id);    break;
+    case "reativar":  reativar(id);          break;
+    case "excluir":   excluirEquipamento(id);break;
+  }
+}
+
 function editarEquipamento(id) {
   const item=equipamentos.find(e=>e.id===id); if(!item)return;
   document.getElementById("equipamento").value=item.nome;
