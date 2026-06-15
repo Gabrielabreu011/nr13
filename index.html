@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
@@ -83,7 +83,6 @@
       <a href="index.html"      style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;background:white;color:var(--green);border:1px solid white;">⚙️ NR-13</a>
       <a href="utilidades.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;background:rgba(255,255,255,.18);color:white;border:1px solid rgba(255,255,255,.25);">🌡️ Utilidades</a>
     </nav>
-    <button class="theme-toggle" id="themeBtn" title="Alternar tema">🌙</button>
   </div>
 </header>
 
@@ -248,6 +247,32 @@
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
       <button class="btn btn-red" id="modalConfirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Histórico -->
+<div class="modal-overlay" id="histOverlay">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h2 id="histTitle">Histórico de manutenções</h2>
+      <button class="modal-close" onclick="fecharHistorico()">✕</button>
+    </div>
+
+    <!-- Form para nova entrada -->
+    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="field"><label>Data</label><input type="date" id="histData"></div>
+      <div class="field"><label>Responsável</label><input type="text" id="histResp" placeholder="Quem realizou"></div>
+      <div class="field" style="grid-column:1/-1"><label>Observação</label><input type="text" id="histObs" placeholder="O que foi feito"></div>
+      <div class="field" style="grid-column:1/-1"><label>Link do laudo/foto (opcional)</label><input type="url" id="histLaudo" placeholder="https://drive.google.com/..."></div>
+    </div>
+    <button class="btn btn-green" onclick="adicionarHistorico()" style="margin-bottom:18px">＋ Adicionar registro</button>
+
+    <!-- Lista do histórico -->
+    <div id="histLista" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" onclick="fecharHistorico()">Fechar</button>
     </div>
   </div>
 </div>
