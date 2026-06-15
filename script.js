@@ -82,6 +82,7 @@ async function submitForm() {
     validadeMeses:  Number(document.getElementById("validadeMeses").value),
     responsavel:    document.getElementById("responsavel").value.trim(),
     statusCustom:   document.getElementById("statusInicial").value,
+    laudoUrl:       document.getElementById("laudoUrl").value.trim(),
     atualizadoEm:   new Date().toISOString(),
   };
   try {
@@ -100,7 +101,7 @@ async function submitForm() {
 }
 
 function resetForm() {
-  ["equipamento","tag","setor","tipo","ultimaInspecao","validadeMeses","responsavel"]
+  ["equipamento","tag","setor","tipo","ultimaInspecao","validadeMeses","responsavel","laudoUrl"]
     .forEach(id => document.getElementById(id).value = "");
   document.getElementById("statusInicial").value     = "ativo";
   editandoId = null;
@@ -166,6 +167,9 @@ function renderizarTabela() {
     const btnDescom  = status.classe!=="descomissionado"
       ? `<button class="btn" style="font-size:11px;padding:6px 10px;background:var(--gray-bg);color:var(--gray)" onclick="descomissionar('${item.id}')">⊘ Descom.</button>`
       : `<button class="btn btn-green" style="font-size:11px;padding:6px 10px" onclick="reativar('${item.id}')">↩ Reativar</button>`;
+    const laudoCell = item.laudoUrl
+      ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
+      : `<span style="color:var(--text3)">—</span>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
@@ -179,6 +183,7 @@ function renderizarTabela() {
       <td class="days-cell ${daysClass}">${daysText}</td>
       <td>${item.responsavel}</td>
       <td><span class="status ${status.classe}">${status.texto}</span></td>
+      <td style="text-align:center">${laudoCell}</td>
       <td><div class="acoes">
         <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick="editarEquipamento('${item.id}')">✏ Editar</button>
         ${btnDescom}
@@ -189,7 +194,7 @@ function renderizarTabela() {
 
   if (visivel===0) {
     const tr = document.createElement("tr"); tr.className="empty-row";
-    tr.innerHTML=`<td colspan="10"><span class="empty-icon">📋</span>Nenhum equipamento encontrado.</td>`;
+    tr.innerHTML=`<td colspan="11"><span class="empty-icon">📋</span>Nenhum equipamento encontrado.</td>`;
     tabela.appendChild(tr);
   }
 
@@ -197,6 +202,52 @@ function renderizarTabela() {
   animateCount("totalVencidas",vencidas); animateCount("totalDescom",descom);
   document.getElementById("countLabel").textContent = `${visivel} registro(s)`;
   atualizarAlertas(vencidas, proximas);
+  atualizarGrafico(validas, proximas, vencidas, descom);
+}
+
+/* ── GRÁFICO DASHBOARD ── */
+let chartNr13Instance = null;
+function atualizarGrafico(validas, proximas, vencidas, descom) {
+  const canvas = document.getElementById("chartNr13");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const total = validas + proximas + vencidas + descom;
+  const data = [validas, proximas, vencidas, descom];
+  const labels = ["Dentro da validade", "Vence em breve", "Vencida", "Descomissionado"];
+  const colors = ["#0d9e5c", "#d9820a", "#c8253d", "#6b7280"];
+
+  if (chartNr13Instance) {
+    chartNr13Instance.data.datasets[0].data = data;
+    chartNr13Instance.update();
+  } else {
+    chartNr13Instance = new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: "65%",
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  // Legenda customizada
+  const legend = document.getElementById("chartLegendNr13");
+  if (legend) {
+    legend.innerHTML = labels.map((lab, i) => {
+      const pct = total > 0 ? Math.round((data[i] / total) * 100) : 0;
+      return `<div style="display:flex;align-items:center;gap:10px;font-size:13px">
+        <span style="width:12px;height:12px;border-radius:3px;background:${colors[i]};flex-shrink:0"></span>
+        <span style="flex:1;color:var(--text2)">${lab}</span>
+        <strong style="font-family:'IBM Plex Mono',monospace">${data[i]}</strong>
+        <span style="color:var(--text3);font-size:11px;width:38px;text-align:right">${pct}%</span>
+      </div>`;
+    }).join("") + `<div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)">Total: <strong style="color:var(--text)">${total}</strong> equipamento(s)</div>`;
+  }
 }
 
 function animateCount(id, target) {
@@ -224,6 +275,7 @@ function editarEquipamento(id) {
   document.getElementById("validadeMeses").value=item.validadeMeses;
   document.getElementById("responsavel").value=item.responsavel;
   document.getElementById("statusInicial").value=item.statusCustom||"ativo";
+  document.getElementById("laudoUrl").value=item.laudoUrl||"";
   editandoId=id;
   document.getElementById("btnSubmit").textContent="✔ Salvar alterações";
   document.getElementById("btnCancelar").style.display="inline-flex";
