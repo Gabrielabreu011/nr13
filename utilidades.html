@@ -71,7 +71,7 @@
     [data-theme="dark"] .type-ac  { background:#2e1a4a; color:#c4b5fd; border-color:#5b21b6; }
 
     /* tabela desta página: min-width menor pois tem mais colunas */
-    #utilTable { min-width:1450px; }
+    #utilTable { min-width:1650px; }
 
     /* ── Hambúrguer / collapse do formulário ── */
     .form-toggle-btn {
@@ -110,16 +110,16 @@
     .chevron { font-size:11px; color:var(--text3); transition:transform .3s; }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Botões de ação organizados (grid 2x2) ── */
+    /* ── Botões de ação em linha única ── */
     .acoes-grid {
-      display:grid;
-      grid-template-columns:repeat(2, auto);
+      display:flex;
+      flex-wrap:nowrap;
       gap:5px;
     }
 
     .act-btn {
-      display:flex; align-items:center; justify-content:center; gap:5px;
-      height:28px; padding:0 9px;
+      display:flex; align-items:center; justify-content:center; gap:4px;
+      height:30px; padding:0 8px;
       border:1px solid var(--border);
       background:var(--surface2);
       border-radius:6px;
@@ -350,7 +350,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table id="utilTable" style="min-width:1450px">
+      <table id="utilTable" style="min-width:1650px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th>
           <th>TAG</th>
