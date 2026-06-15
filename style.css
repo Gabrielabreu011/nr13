@@ -320,8 +320,6 @@ th {
   letter-spacing: .08em;
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 64px;
 }
 
 td {
