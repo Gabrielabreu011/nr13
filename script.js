@@ -122,10 +122,10 @@ function calcularDias(data) {
   return Math.ceil((fut - hoje) / 86400000);
 }
 function obterStatusCalc(dias, custom) {
-  if (custom === "descomissionado") return { classe:"descomissionado", texto:"DESCOM." };
-  if (dias < 0)            return { classe:"vencida",  texto:"VENCIDA" };
-  if (dias <= DIAS_ALERTA) return { classe:"proxima",  texto:"VENCE EM BREVE" };
-  return                          { classe:"valida",   texto:"DENTRO DA VALIDADE" };
+  if (custom === "descomissionado") return { classe:"descomissionado", texto:"⊘ DESCOM." };
+  if (dias < 0)            return { classe:"vencida",  texto:"⛔ VENCIDA" };
+  if (dias <= DIAS_ALERTA) return { classe:"proxima",  texto:"⏰ ALERTA" };
+  return                          { classe:"valida",   texto:"✓ OK" };
 }
 function fmtData(d) { return new Date(d).toLocaleDateString("pt-BR"); }
 
@@ -155,11 +155,12 @@ function renderizarTabela() {
     visivel++;
 
     const daysClass  = status.classe==="descomissionado" ? "days-gray" : dias<0 ? "days-bad" : dias<=30 ? "days-warn" : "days-ok";
-    const daysText   = status.classe==="descomissionado" ? "—" : dias<0 ? `${Math.abs(dias)}d vencido` : `${dias}d`;
+    const daysIcon   = status.classe==="descomissionado" ? "" : dias<0 ? "⛔ " : dias<=30 ? "⏰ " : "✓ ";
+    const daysText   = status.classe==="descomissionado" ? "—" : dias<0 ? `${daysIcon}${Math.abs(dias)}d vencido` : `${daysIcon}${dias}d`;
     const proximaFmt = status.classe==="descomissionado" ? "—" : fmtData(proxima);
     const laudoCell = item.laudoUrl
-      ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
-      : `<span style="color:var(--text3)">—</span>`;
+      ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:14px;text-decoration:none">📄</a>`
+      : `<span style="color:var(--text3);font-size:12px">—</span>`;
 
     const isDescom = status.classe === "descomissionado";
     const descomBtn = isDescom
