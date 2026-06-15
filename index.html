@@ -51,6 +51,47 @@
       transition:transform .3s;
     }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
+
+    /* ── Menu de ações (☰ dropdown) ── */
+    .actions-menu { position:relative; display:inline-block; }
+
+    .actions-menu-btn {
+      width:34px; height:34px;
+      border:1px solid var(--border);
+      background:var(--surface2);
+      border-radius:7px;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:15px; color:var(--text2);
+      transition:background .2s, border-color .2s;
+    }
+    .actions-menu-btn:hover { background:var(--border); }
+
+    .actions-menu-dropdown {
+      position:absolute; right:0; top:calc(100% + 6px);
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; box-shadow:var(--shadow-lg);
+      min-width:170px; padding:6px;
+      display:none; flex-direction:column; gap:2px;
+      z-index:50;
+    }
+    .actions-menu-dropdown.open { display:flex; }
+
+    .actions-menu-dropdown button {
+      display:flex; align-items:center; gap:10px;
+      width:100%; text-align:left;
+      padding:9px 10px; border:none; background:none;
+      border-radius:6px; cursor:pointer;
+      font-family:'IBM Plex Sans',sans-serif;
+      font-size:13px; color:var(--text);
+      transition:background .15s;
+    }
+    .actions-menu-dropdown button:hover { background:var(--surface2); }
+    .actions-menu-dropdown button.danger { color:var(--red); }
+    .actions-menu-dropdown button.danger:hover { background:var(--red-bg); }
+    .actions-menu-dropdown hr {
+      border:none; border-top:1px solid var(--border); margin:4px 0;
+    }
   </style>
 
   <!-- Firebase -->
@@ -223,7 +264,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table style="min-width:1450px">
+      <table style="min-width:1250px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th><th>TAG</th><th>Setor</th><th>Tipo NR-13</th>
           <th>Última inspeção</th><th>Próxima inspeção</th><th>Dias restantes</th>
@@ -290,6 +331,19 @@ function toggleFormNr13(forceOpen) {
   const chev = btn.closest(".panel").querySelector(".chevron");
   if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
 }
+
+/* ── Menu de ações ☰ (dropdown) ── */
+function toggleActionsMenu(id, ev) {
+  ev.stopPropagation();
+  const dropdown = document.getElementById("menu-" + id);
+  const isOpen = dropdown.classList.contains("open");
+  // fecha todos os outros menus abertos
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => d.classList.remove("open"));
+  if (!isOpen) dropdown.classList.add("open");
+}
+document.addEventListener("click", () => {
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => d.classList.remove("open"));
+});
 </script>
 
 <script src="script.js"></script>
