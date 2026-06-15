@@ -157,12 +157,14 @@ function renderizarTabela() {
     const daysClass  = status.classe==="descomissionado" ? "days-gray" : dias<0 ? "days-bad" : dias<=30 ? "days-warn" : "days-ok";
     const daysText   = status.classe==="descomissionado" ? "—" : dias<0 ? `${Math.abs(dias)}d vencido` : `${dias}d`;
     const proximaFmt = status.classe==="descomissionado" ? "—" : fmtData(proxima);
-    const btnDescom  = status.classe!=="descomissionado"
-      ? `<button class="btn" style="font-size:11px;padding:6px 10px;background:var(--gray-bg);color:var(--gray)" onclick="descomissionar('${item.id}')">⊘ Descom.</button>`
-      : `<button class="btn btn-green" style="font-size:11px;padding:6px 10px" onclick="reativar('${item.id}')">↩ Reativar</button>`;
     const laudoCell = item.laudoUrl
       ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
       : `<span style="color:var(--text3)">—</span>`;
+
+    const isDescom = status.classe === "descomissionado";
+    const descomItem = isDescom
+      ? `<button onclick="reativar('${item.id}')">↩ Reativar</button>`
+      : `<button onclick="descomissionar('${item.id}')">⊘ Descomissionar</button>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
@@ -177,12 +179,18 @@ function renderizarTabela() {
       <td>${item.responsavel}</td>
       <td><span class="status ${status.classe}">${status.texto}</span></td>
       <td style="text-align:center">${laudoCell}</td>
-      <td><div class="acoes">
-        <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick="editarEquipamento('${item.id}')">✏ Editar</button>
-        <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
-        ${btnDescom}
-        <button class="btn btn-red" style="font-size:11px;padding:6px 10px" onclick="excluirEquipamento('${item.id}')">🗑</button>
-      </div></td>`;
+      <td>
+        <div class="actions-menu">
+          <button class="actions-menu-btn" onclick="toggleActionsMenu('${item.id}', event)" title="Ações">☰</button>
+          <div class="actions-menu-dropdown" id="menu-${item.id}">
+            <button onclick="editarEquipamento('${item.id}')">✏ Editar</button>
+            <button onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
+            ${descomItem}
+            <hr>
+            <button class="danger" onclick="excluirEquipamento('${item.id}')">🗑 Excluir</button>
+          </div>
+        </div>
+      </td>`;
     tabela.appendChild(tr);
   });
 
