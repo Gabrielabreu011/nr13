@@ -163,8 +163,8 @@ function renderizarTabela() {
 
     const isDescom = status.classe === "descomissionado";
     const descomItem = isDescom
-      ? `<button onclick="reativar('${item.id}')">↩ Reativar</button>`
-      : `<button onclick="descomissionar('${item.id}')">⊘ Descomissionar</button>`;
+      ? `<button onclick="this.closest('details').removeAttribute('open');reativar('${item.id}')">↩ Reativar</button>`
+      : `<button onclick="this.closest('details').removeAttribute('open');descomissionar('${item.id}')">⊘ Descomissionar</button>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
@@ -180,16 +180,16 @@ function renderizarTabela() {
       <td><span class="status ${status.classe}">${status.texto}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <div class="actions-menu">
-          <button class="actions-menu-btn" onclick="toggleActionsMenu('${item.id}', event)" title="Ações">☰</button>
-          <div class="actions-menu-dropdown" id="menu-${item.id}">
-            <button onclick="editarEquipamento('${item.id}')">✏ Editar</button>
-            <button onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
+        <details class="actions-menu">
+          <summary title="Ações">☰</summary>
+          <div class="actions-menu-dropdown">
+            <button onclick="this.closest('details').removeAttribute('open');editarEquipamento('${item.id}')">✏ Editar</button>
+            <button onclick="this.closest('details').removeAttribute('open');abrirHistorico('${item.id}')">📋 Histórico</button>
             ${descomItem}
             <hr>
-            <button class="danger" onclick="excluirEquipamento('${item.id}')">🗑 Excluir</button>
+            <button class="danger" onclick="this.closest('details').removeAttribute('open');excluirEquipamento('${item.id}')">🗑 Excluir</button>
           </div>
-        </div>
+        </details>
       </td>`;
     tabela.appendChild(tr);
   });
