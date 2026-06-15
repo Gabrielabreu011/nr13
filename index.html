@@ -69,11 +69,14 @@
 
     .actions-menu-dropdown {
       position:absolute; right:0; top:calc(100% + 6px);
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:8px; box-shadow:var(--shadow-lg);
+      background:var(--surface) !important;
+      background-color:var(--surface) !important;
+      border:1px solid var(--border);
+      border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5), 0 0 0 1px var(--border);
       min-width:170px; padding:6px;
       display:none; flex-direction:column; gap:2px;
-      z-index:50;
+      z-index:9999;
+      isolation:isolate;
     }
     .actions-menu-dropdown.open { display:flex; }
 
@@ -338,12 +341,32 @@ function toggleActionsMenu(id, ev) {
   const dropdown = document.getElementById("menu-" + id);
   const isOpen = dropdown.classList.contains("open");
   // fecha todos os outros menus abertos
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => d.classList.remove("open"));
-  if (!isOpen) dropdown.classList.add("open");
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
+    d.classList.remove("open");
+    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
+  });
+  if (!isOpen) {
+    const btn = ev.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    dropdown.style.position = "fixed";
+    dropdown.style.top  = (rect.bottom + 6) + "px";
+    dropdown.style.left = "auto";
+    dropdown.style.right = (window.innerWidth - rect.right) + "px";
+    dropdown.classList.add("open");
+  }
 }
 document.addEventListener("click", () => {
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => d.classList.remove("open"));
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
+    d.classList.remove("open");
+    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
+  });
 });
+document.addEventListener("scroll", () => {
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
+    d.classList.remove("open");
+    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
+  });
+}, true);
 </script>
 
 <script src="script.js"></script>
