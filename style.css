@@ -367,8 +367,10 @@ body.compact .status {
   padding: 3px 8px;
 }
 body.compact .acoes-select {
-  height: 28px;
+  height: 30px;
   font-size: 11px;
+  padding: 0 28px 0 12px;
+  background-position: right 10px center;
 }
 
 /* ── TOGGLE COMPACTO ── */
