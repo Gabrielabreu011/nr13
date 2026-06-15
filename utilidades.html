@@ -71,7 +71,7 @@
     [data-theme="dark"] .type-ac  { background:#2e1a4a; color:#c4b5fd; border-color:#5b21b6; }
 
     /* tabela desta página: min-width menor pois tem mais colunas */
-    #utilTable { min-width:1650px; }
+    #utilTable { min-width:1300px; }
 
     /* ── Hambúrguer / collapse do formulário ── */
     .form-toggle-btn {
@@ -110,30 +110,26 @@
     .chevron { font-size:11px; color:var(--text3); transition:transform .3s; }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Botões de ação em linha única ── */
-    .acoes-grid {
-      display:flex;
-      flex-wrap:nowrap;
-      gap:5px;
-    }
-
-    .act-btn {
-      display:flex; align-items:center; justify-content:center; gap:4px;
-      height:30px; padding:0 8px;
+    /* ── Select de ações ── */
+    .acoes-select {
+      width:130px; height:34px;
+      padding:0 8px;
       border:1px solid var(--border);
       background:var(--surface2);
-      border-radius:6px;
+      color:var(--text2);
+      border-radius:7px;
       cursor:pointer;
       font-family:'IBM Plex Sans',sans-serif;
-      font-size:11px; font-weight:600;
-      color:var(--text2);
-      white-space:nowrap;
-      transition:background .15s, border-color .15s, color .15s;
+      font-size:12px; font-weight:600;
+      outline:none;
+      transition:border-color .15s, background .15s;
     }
-    .act-btn:hover { background:var(--border); color:var(--text); }
-    .act-btn.danger:hover  { background:var(--red-bg);   border-color:var(--red);   color:var(--red); }
-    .act-btn.success:hover { background:var(--green-bg); border-color:var(--green); color:var(--green); }
-    .act-btn.warn:hover    { background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow); }
+    .acoes-select:hover, .acoes-select:focus {
+      border-color:var(--green);
+      background:var(--border);
+    }
+    .acoes-select option { background:var(--surface); color:var(--text); }
+    .acoes-select option.danger { color:var(--red); }
   </style>
 </head>
 <body>
@@ -355,7 +351,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table id="utilTable" style="min-width:1650px">
+      <table id="utilTable" style="min-width:1300px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th>
           <th>TAG</th>
@@ -601,6 +597,19 @@ function toggleFormUtil(forceOpen) {
   if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
 }
 
+// ── DISPATCHER DO SELECT DE AÇÕES ──
+function executarAcaoUtil(id, acao) {
+  const item = utilItems.find(i => i.id === id);
+  if (!item) return;
+  switch (acao) {
+    case "editar":     iniciarEdicao(item);   break;
+    case "historico":  abrirHistorico(id);    break;
+    case "desativar":  desativarItem(id);     break;
+    case "reativar":   reativarItem(id);      break;
+    case "excluir":    excluirItem(id);       break;
+  }
+}
+
 function iniciarEdicao(item) {
   editandoId = item.id;
   document.getElementById("f-nome").value   = item.nome;
@@ -739,9 +748,9 @@ function renderizar() {
     const statusCls  = st.cls === "ok" ? "valida" : st.cls === "warn" ? "proxima"
                      : st.cls === "danger" ? "vencida" : "descomissionado";
 
-    const ativaBtn = item.status === "desativado"
-      ? `<button class="act-btn success" onclick="reativarItem('${item.id}')">↩ Reativar</button>`
-      : `<button class="act-btn warn" onclick="desativarItem('${item.id}')">⊘ Desativar</button>`;
+    const ativaOpt = item.status === "desativado"
+      ? `<option value="reativar">↩ Reativar</option>`
+      : `<option value="desativar">⊘ Desativar</option>`;
     const laudoCell = item.laudoUrl
       ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:14px;text-decoration:none">📄</a>`
       : `<span style="color:var(--text3);font-size:12px">—</span>`;
@@ -763,12 +772,13 @@ function renderizar() {
       <td><span class="status ${statusCls}">${st.txt}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <div class="acoes-grid">
-          <button class="act-btn" onclick='iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏ Editar</button>
-          <button class="act-btn" onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
-          ${ativaBtn}
-          <button class="act-btn danger" onclick="excluirItem('${item.id}')">🗑 Excluir</button>
-        </div>
+        <select class="acoes-select" onchange="executarAcaoUtil('${item.id}', this.value); this.value='';">
+          <option value="" selected disabled>Ações ▾</option>
+          <option value="editar">✏ Editar</option>
+          <option value="historico">📋 Histórico</option>
+          ${ativaOpt}
+          <option value="excluir" class="danger">🗑 Excluir</option>
+        </select>
       </td>`;
     tbody.appendChild(tr);
   });
