@@ -52,55 +52,23 @@
     }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Menu de ações (☰ dropdown via details/summary) ── */
-    .actions-menu { position:relative; }
+    /* ── Botões de ação compactos (somente ícones) ── */
+    .acoes-icon { display:flex; gap:5px; flex-wrap:nowrap; }
 
-    .actions-menu summary {
-      width:34px; height:34px;
+    .icon-btn {
+      width:30px; height:30px;
       border:1px solid var(--border);
       background:var(--surface2);
-      border-radius:7px;
+      border-radius:6px;
       cursor:pointer;
       display:flex; align-items:center; justify-content:center;
-      font-size:15px; color:var(--text2);
-      list-style:none;
-      user-select:none;
+      font-size:13px; color:var(--text2);
+      transition:background .15s, border-color .15s;
+      flex-shrink:0;
     }
-    .actions-menu summary::-webkit-details-marker { display:none; }
-    .actions-menu summary:hover { background:var(--border); }
-    .actions-menu[open] summary { background:var(--border); }
-
-    .actions-menu-dropdown {
-      position:absolute; right:0; top:calc(100% + 6px);
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:8px;
-      box-shadow:0 10px 30px rgba(0,0,0,.45);
-      min-width:170px; padding:6px;
-      display:flex; flex-direction:column; gap:2px;
-      z-index:200;
-    }
-
-    .actions-menu-dropdown button {
-      display:flex; align-items:center; gap:10px;
-      width:100%; text-align:left;
-      padding:9px 10px; border:none; background:none;
-      border-radius:6px; cursor:pointer;
-      font-family:'IBM Plex Sans',sans-serif;
-      font-size:13px; color:var(--text);
-      transition:background .15s;
-    }
-    .actions-menu-dropdown button:hover { background:var(--surface2); }
-    .actions-menu-dropdown button.danger { color:var(--red); }
-    .actions-menu-dropdown button.danger:hover { background:var(--red-bg); }
-    .actions-menu-dropdown hr {
-      border:none; border-top:1px solid var(--border); margin:4px 0;
-    }
-
-    /* Permite o dropdown "vazar" para fora da tabela */
-    .table-wrapper:has(.actions-menu[open]) {
-      overflow:visible;
-    }
+    .icon-btn:hover { background:var(--border); }
+    .icon-btn.danger:hover { background:var(--red-bg); border-color:var(--red); color:var(--red); }
+    .icon-btn.success:hover { background:var(--green-bg); border-color:var(--green); color:var(--green); }
   </style>
 
   <!-- Firebase -->
@@ -340,13 +308,6 @@ function toggleFormNr13(forceOpen) {
   const chev = btn.closest(".panel").querySelector(".chevron");
   if (chev) chev.style.transform = shouldOpen ? "rotate(180deg)" : "";
 }
-
-/* ── Fecha menus <details> ao clicar fora ── */
-document.addEventListener("click", (e) => {
-  document.querySelectorAll(".actions-menu[open]").forEach(d => {
-    if (!d.contains(e.target)) d.removeAttribute("open");
-  });
-});
 </script>
 
 <script src="script.js"></script>
