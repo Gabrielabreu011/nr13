@@ -336,37 +336,33 @@ function toggleFormNr13(forceOpen) {
 }
 
 /* ── Menu de ações ☰ (dropdown) ── */
+function closeAllMenus() {
+  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
+    d.classList.remove("open");
+    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = ""; d.style.width = "";
+  });
+}
 function toggleActionsMenu(id, ev) {
   ev.stopPropagation();
   const dropdown = document.getElementById("menu-" + id);
   const isOpen = dropdown.classList.contains("open");
-  // fecha todos os outros menus abertos
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
-    d.classList.remove("open");
-    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
-  });
+  closeAllMenus();
   if (!isOpen) {
     const btn = ev.currentTarget;
     const rect = btn.getBoundingClientRect();
+    const menuWidth = 180;
+    let left = rect.right - menuWidth;
+    if (left < 8) left = 8;
     dropdown.style.position = "fixed";
-    dropdown.style.top  = (rect.bottom + 6) + "px";
-    dropdown.style.left = "auto";
-    dropdown.style.right = (window.innerWidth - rect.right) + "px";
+    dropdown.style.top   = (rect.bottom + 6) + "px";
+    dropdown.style.left  = left + "px";
+    dropdown.style.right = "auto";
+    dropdown.style.width = menuWidth + "px";
     dropdown.classList.add("open");
   }
 }
-document.addEventListener("click", () => {
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
-    d.classList.remove("open");
-    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
-  });
-});
-document.addEventListener("scroll", () => {
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
-    d.classList.remove("open");
-    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = "";
-  });
-}, true);
+document.addEventListener("click", closeAllMenus);
+document.addEventListener("scroll", closeAllMenus, true);
 </script>
 
 <script src="script.js"></script>
