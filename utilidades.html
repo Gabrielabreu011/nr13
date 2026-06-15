@@ -148,6 +148,11 @@
     </div>
   </div>
   <div class="header-right">
+    <label class="compact-toggle">
+      <input type="checkbox" id="compactToggle" onchange="toggleCompact()">
+      <span class="switch"></span>
+      Modo compacto
+    </label>
     <nav class="nav-pills">
       <a href="index.html"      class="nav-pill inactive">⚙️ NR-13</a>
       <a href="utilidades.html" class="nav-pill active">🌡️ Utilidades</a>
@@ -363,7 +368,7 @@
           <th>Serviço</th>
           <th>Responsável</th>
           <th>Status</th>
-          <th>Laudo</th>
+          <th style="width:50px">📄</th>
           <th>Ações</th>
         </tr></thead>
         <tbody id="tabelaUtil"></tbody>
@@ -417,6 +422,22 @@
    TEMA — fixo em dark
 ════════════════════════════════════════ */
 document.documentElement.setAttribute("data-theme", "dark");
+
+/* ════════════════════════════════════════
+   MODO COMPACTO
+════════════════════════════════════════ */
+function toggleCompact() {
+  const on = document.getElementById("compactToggle").checked;
+  document.body.classList.toggle("compact", on);
+  localStorage.setItem("nr13_compact", on ? "1" : "0");
+}
+(function() {
+  const on = localStorage.getItem("nr13_compact") === "1";
+  document.body.classList.toggle("compact", on);
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("compactToggle").checked = on;
+  });
+})();
 
 /* ════════════════════════════════════════
    CONSTANTES DE TIPO
@@ -506,12 +527,12 @@ function calcularDias(d) {
 function fmtData(d) { return new Date(d).toLocaleDateString("pt-BR"); }
 
 function calcStatus(item) {
-  if (item.status === "desativado") return { cls:"off",    txt:"DESATIVADO" };
+  if (item.status === "desativado") return { cls:"off",    txt:"⊘ DESATIVADO" };
   const prox = calcularProxima(item.ultima, item.periodo);
   const dias = calcularDias(prox);
-  if (dias < 0)            return { cls:"danger", txt:"VENCIDA",          dias };
-  if (dias <= DIAS_ALERTA) return { cls:"warn",   txt:"VENCE EM BREVE",   dias };
-                           return { cls:"ok",     txt:"DENTRO DA VALIDADE", dias };
+  if (dias < 0)            return { cls:"danger", txt:"⛔ VENCIDA",  dias };
+  if (dias <= DIAS_ALERTA) return { cls:"warn",   txt:"⏰ ALERTA",   dias };
+                           return { cls:"ok",     txt:"✓ OK",       dias };
 }
 
 /* ════════════════════════════════════════
@@ -709,9 +730,10 @@ function renderizar() {
     const daysClass = st.cls === "off" ? "days-gray"
                     : st.dias < 0      ? "days-bad"
                     : st.dias <= 30    ? "days-warn" : "days-ok";
+    const daysIcon  = st.cls === "off" ? "" : st.dias < 0 ? "⛔ " : st.dias <= 30 ? "⏰ " : "✓ ";
     const daysText  = st.cls === "off" ? "—"
-                    : st.dias < 0 ? `${Math.abs(st.dias)}d vencido`
-                    : `${st.dias}d`;
+                    : st.dias < 0 ? `${daysIcon}${Math.abs(st.dias)}d vencido`
+                    : `${daysIcon}${st.dias}d`;
     const badgeCls   = cat === "beb" ? "type-beb" : cat === "ac" ? "type-ac" : "";
     const tipoBadge  = `<span class="type-badge ${badgeCls}">${item.tipo}</span>`;
     const statusCls  = st.cls === "ok" ? "valida" : st.cls === "warn" ? "proxima"
@@ -721,8 +743,8 @@ function renderizar() {
       ? `<button class="act-btn success" onclick="reativarItem('${item.id}')">↩ Reativar</button>`
       : `<button class="act-btn warn" onclick="desativarItem('${item.id}')">⊘ Desativar</button>`;
     const laudoCell = item.laudoUrl
-      ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
-      : `<span style="color:var(--text3)">—</span>`;
+      ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:14px;text-decoration:none">📄</a>`
+      : `<span style="color:var(--text3);font-size:12px">—</span>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
