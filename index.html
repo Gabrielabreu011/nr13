@@ -52,30 +52,26 @@
     }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Botões de ação em linha única ── */
-    .acoes-grid {
-      display:flex;
-      flex-wrap:nowrap;
-      gap:5px;
-    }
-
-    .act-btn {
-      display:flex; align-items:center; justify-content:center; gap:4px;
-      height:30px; padding:0 8px;
+    /* ── Select de ações ── */
+    .acoes-select {
+      width:130px; height:34px;
+      padding:0 8px;
       border:1px solid var(--border);
       background:var(--surface2);
-      border-radius:6px;
+      color:var(--text2);
+      border-radius:7px;
       cursor:pointer;
       font-family:'IBM Plex Sans',sans-serif;
-      font-size:11px; font-weight:600;
-      color:var(--text2);
-      white-space:nowrap;
-      transition:background .15s, border-color .15s, color .15s;
+      font-size:12px; font-weight:600;
+      outline:none;
+      transition:border-color .15s, background .15s;
     }
-    .act-btn:hover { background:var(--border); color:var(--text); }
-    .act-btn.danger:hover  { background:var(--red-bg);   border-color:var(--red);   color:var(--red); }
-    .act-btn.success:hover { background:var(--green-bg); border-color:var(--green); color:var(--green); }
-    .act-btn.warn:hover    { background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow); }
+    .acoes-select:hover, .acoes-select:focus {
+      border-color:var(--green);
+      background:var(--border);
+    }
+    .acoes-select option { background:var(--surface); color:var(--text); }
+    .acoes-select option.danger { color:var(--red); }
   </style>
 
   <!-- Firebase -->
@@ -253,7 +249,7 @@
       <button class="btn btn-ghost" onclick="limparFiltros()">↺ Limpar</button>
     </div>
     <div class="table-wrapper">
-      <table style="min-width:1450px">
+      <table style="min-width:1200px">
         <thead><tr style="white-space:nowrap">
           <th>Equipamento</th><th>TAG</th><th>Setor</th><th>Tipo NR-13</th>
           <th>Última inspeção</th><th>Próxima inspeção</th><th>Dias restantes</th>
