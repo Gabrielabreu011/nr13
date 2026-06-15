@@ -162,9 +162,9 @@ function renderizarTabela() {
       : `<span style="color:var(--text3)">—</span>`;
 
     const isDescom = status.classe === "descomissionado";
-    const descomItem = isDescom
-      ? `<button onclick="this.closest('details').removeAttribute('open');reativar('${item.id}')">↩ Reativar</button>`
-      : `<button onclick="this.closest('details').removeAttribute('open');descomissionar('${item.id}')">⊘ Descomissionar</button>`;
+    const descomBtn = isDescom
+      ? `<button class="icon-btn success" title="Reativar" onclick="reativar('${item.id}')">↩</button>`
+      : `<button class="icon-btn" title="Descomissionar" onclick="descomissionar('${item.id}')">⊘</button>`;
 
     const tr = document.createElement("tr");
     tr.className = "row-in";
@@ -180,16 +180,12 @@ function renderizarTabela() {
       <td><span class="status ${status.classe}">${status.texto}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <details class="actions-menu">
-          <summary title="Ações">☰</summary>
-          <div class="actions-menu-dropdown">
-            <button onclick="this.closest('details').removeAttribute('open');editarEquipamento('${item.id}')">✏ Editar</button>
-            <button onclick="this.closest('details').removeAttribute('open');abrirHistorico('${item.id}')">📋 Histórico</button>
-            ${descomItem}
-            <hr>
-            <button class="danger" onclick="this.closest('details').removeAttribute('open');excluirEquipamento('${item.id}')">🗑 Excluir</button>
-          </div>
-        </details>
+        <div class="acoes-icon">
+          <button class="icon-btn" title="Editar" onclick="editarEquipamento('${item.id}')">✏</button>
+          <button class="icon-btn" title="Histórico" onclick="abrirHistorico('${item.id}')">📋</button>
+          ${descomBtn}
+          <button class="icon-btn danger" title="Excluir" onclick="excluirEquipamento('${item.id}')">🗑</button>
+        </div>
       </td>`;
     tabela.appendChild(tr);
   });
