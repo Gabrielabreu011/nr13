@@ -110,10 +110,10 @@
     .chevron { font-size:11px; color:var(--text3); transition:transform .3s; }
     .form-toggle-btn.open .chevron { transform:rotate(180deg); }
 
-    /* ── Menu de ações (☰ dropdown) ── */
-    .actions-menu { position:relative; display:inline-block; }
+    /* ── Menu de ações (☰ dropdown via details/summary) ── */
+    .actions-menu { position:relative; }
 
-    .actions-menu-btn {
+    .actions-menu summary {
       width:34px; height:34px;
       border:1px solid var(--border);
       background:var(--surface2);
@@ -121,22 +121,23 @@
       cursor:pointer;
       display:flex; align-items:center; justify-content:center;
       font-size:15px; color:var(--text2);
-      transition:background .2s, border-color .2s;
+      list-style:none;
+      user-select:none;
     }
-    .actions-menu-btn:hover { background:var(--border); }
+    .actions-menu summary::-webkit-details-marker { display:none; }
+    .actions-menu summary:hover { background:var(--border); }
+    .actions-menu[open] summary { background:var(--border); }
 
     .actions-menu-dropdown {
       position:absolute; right:0; top:calc(100% + 6px);
-      background:var(--surface) !important;
-      background-color:var(--surface) !important;
+      background:var(--surface);
       border:1px solid var(--border);
-      border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5), 0 0 0 1px var(--border);
+      border-radius:8px;
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
       min-width:170px; padding:6px;
-      display:none; flex-direction:column; gap:2px;
-      z-index:9999;
-      isolation:isolate;
+      display:flex; flex-direction:column; gap:2px;
+      z-index:200;
     }
-    .actions-menu-dropdown.open { display:flex; }
 
     .actions-menu-dropdown button {
       display:flex; align-items:center; gap:10px;
@@ -152,6 +153,10 @@
     .actions-menu-dropdown button.danger:hover { background:var(--red-bg); }
     .actions-menu-dropdown hr {
       border:none; border-top:1px solid var(--border); margin:4px 0;
+    }
+
+    .table-wrapper:has(.actions-menu[open]) {
+      overflow:visible;
     }
   </style>
 </head>
@@ -480,34 +485,12 @@ let editandoId = null;
 let modalCallback = null;
 let histEquipamentoId = null;
 
-/* ── Menu de ações ☰ (dropdown) ── */
-function closeAllMenus() {
-  document.querySelectorAll(".actions-menu-dropdown.open").forEach(d => {
-    d.classList.remove("open");
-    d.style.position = ""; d.style.top = ""; d.style.left = ""; d.style.right = ""; d.style.width = "";
+/* ── Fecha menus <details> ao clicar fora ── */
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".actions-menu[open]").forEach(d => {
+    if (!d.contains(e.target)) d.removeAttribute("open");
   });
-}
-function toggleActionsMenu(id, ev) {
-  ev.stopPropagation();
-  const dropdown = document.getElementById("menu-" + id);
-  const isOpen = dropdown.classList.contains("open");
-  closeAllMenus();
-  if (!isOpen) {
-    const btn = ev.currentTarget;
-    const rect = btn.getBoundingClientRect();
-    const menuWidth = 180;
-    let left = rect.right - menuWidth;
-    if (left < 8) left = 8;
-    dropdown.style.position = "fixed";
-    dropdown.style.top   = (rect.bottom + 6) + "px";
-    dropdown.style.left  = left + "px";
-    dropdown.style.right = "auto";
-    dropdown.style.width = menuWidth + "px";
-    dropdown.classList.add("open");
-  }
-}
-document.addEventListener("click", closeAllMenus);
-document.addEventListener("scroll", closeAllMenus, true);
+});
 
 // Escuta em tempo real — mesmo padrão do script.js
 COL.orderBy("nome").onSnapshot(snap => {
@@ -766,8 +749,8 @@ function renderizar() {
                      : st.cls === "danger" ? "vencida" : "descomissionado";
 
     const ativaItem = item.status === "desativado"
-      ? `<button onclick="reativarItem('${item.id}')">↩ Reativar</button>`
-      : `<button onclick="desativarItem('${item.id}')">⊘ Desativar</button>`;
+      ? `<button onclick="this.closest('details').removeAttribute('open');reativarItem('${item.id}')">↩ Reativar</button>`
+      : `<button onclick="this.closest('details').removeAttribute('open');desativarItem('${item.id}')">⊘ Desativar</button>`;
     const laudoCell = item.laudoUrl
       ? `<a href="${item.laudoUrl}" target="_blank" rel="noopener" title="Ver laudo/foto" style="font-size:16px;text-decoration:none">📄</a>`
       : `<span style="color:var(--text3)">—</span>`;
@@ -789,16 +772,16 @@ function renderizar() {
       <td><span class="status ${statusCls}">${st.txt}</span></td>
       <td style="text-align:center">${laudoCell}</td>
       <td>
-        <div class="actions-menu">
-          <button class="actions-menu-btn" onclick="toggleActionsMenu('${item.id}', event)" title="Ações">☰</button>
-          <div class="actions-menu-dropdown" id="menu-${item.id}">
-            <button onclick='iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏ Editar</button>
-            <button onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
+        <details class="actions-menu">
+          <summary title="Ações">☰</summary>
+          <div class="actions-menu-dropdown">
+            <button onclick='this.closest("details").removeAttribute("open");iniciarEdicao(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✏ Editar</button>
+            <button onclick="this.closest('details').removeAttribute('open');abrirHistorico('${item.id}')">📋 Histórico</button>
             ${ativaItem}
             <hr>
-            <button class="danger" onclick="excluirItem('${item.id}')">🗑 Excluir</button>
+            <button class="danger" onclick="this.closest('details').removeAttribute('open');excluirItem('${item.id}')">🗑 Excluir</button>
           </div>
-        </div>
+        </details>
       </td>`;
     tbody.appendChild(tr);
   });
