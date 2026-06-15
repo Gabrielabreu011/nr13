@@ -9,39 +9,32 @@ let modalCallback = null;
 
 // ── INIT ──
 document.addEventListener("DOMContentLoaded", () => {
-  aplicarTema();
+  document.documentElement.setAttribute("data-theme", "dark");
   carregarConfiguracoes();
   document.getElementById("busca").addEventListener("input", renderizarTabela);
   document.getElementById("filtroStatus").addEventListener("change", renderizarTabela);
   document.getElementById("filtroTipo").addEventListener("change", renderizarTabela);
-  document.getElementById("themeBtn").addEventListener("click", toggleTema);
   document.getElementById("modalOverlay").addEventListener("click", e => {
     if (e.target === e.currentTarget) fecharModal();
+  });
+  document.getElementById("histOverlay").addEventListener("click", e => {
+    if (e.target === e.currentTarget) fecharHistorico();
   });
 
   // Escuta mudanças em tempo real no Firestore
   window.db.collection("equipamentos").orderBy("nome").onSnapshot(snapshot => {
     equipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderizarTabela();
+    // Mantém o modal de histórico sincronizado se estiver aberto
+    if (histEquipamentoId) {
+      const item = equipamentos.find(e => e.id === histEquipamentoId);
+      if (item) renderizarHistorico(item.historico || []);
+    }
   }, err => {
     console.error("Firestore:", err);
     mostrarToast("Erro ao conectar ao banco de dados.", "red");
   });
 });
-
-// ── TEMA ──
-function toggleTema() {
-  const html   = document.documentElement;
-  const isDark = html.getAttribute("data-theme") === "dark";
-  html.setAttribute("data-theme", isDark ? "light" : "dark");
-  document.getElementById("themeBtn").textContent = isDark ? "🌙" : "☀️";
-  localStorage.setItem("nr13_tema", isDark ? "light" : "dark");
-}
-function aplicarTema() {
-  const t = localStorage.getItem("nr13_tema") || "light";
-  document.documentElement.setAttribute("data-theme", t);
-  document.getElementById("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
-}
 
 // ── CONFIGURAÇÕES DE E-MAIL ──
 function carregarConfiguracoes() {
@@ -186,6 +179,7 @@ function renderizarTabela() {
       <td style="text-align:center">${laudoCell}</td>
       <td><div class="acoes">
         <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick="editarEquipamento('${item.id}')">✏ Editar</button>
+        <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px" onclick="abrirHistorico('${item.id}')">📋 Histórico</button>
         ${btnDescom}
         <button class="btn btn-red" style="font-size:11px;padding:6px 10px" onclick="excluirEquipamento('${item.id}')">🗑</button>
       </div></td>`;
@@ -464,4 +458,96 @@ function exportarCSV() {
   });
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="nr13_export.csv"; a.click();
+}
+
+// ── HISTÓRICO DE MANUTENÇÕES ──
+let histEquipamentoId = null;
+
+function abrirHistorico(id) {
+  const item = equipamentos.find(e => e.id === id);
+  if (!item) return;
+  histEquipamentoId = id;
+  document.getElementById("histTitle").textContent = `Histórico — ${item.nome} (${item.tag})`;
+  document.getElementById("histData").value  = "";
+  document.getElementById("histResp").value  = "";
+  document.getElementById("histObs").value   = "";
+  document.getElementById("histLaudo").value = "";
+  renderizarHistorico(item.historico || []);
+  document.getElementById("histOverlay").classList.add("open");
+}
+
+function fecharHistorico() {
+  document.getElementById("histOverlay").classList.remove("open");
+  histEquipamentoId = null;
+}
+
+function renderizarHistorico(historico) {
+  const lista = document.getElementById("histLista");
+  if (!historico || !historico.length) {
+    lista.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">
+      <span style="font-size:28px;display:block;margin-bottom:8px">📋</span>
+      Nenhum registro de manutenção ainda.
+    </div>`;
+    return;
+  }
+  // mais recente primeiro
+  const ordenado = [...historico].sort((a,b) => new Date(b.data) - new Date(a.data));
+  lista.innerHTML = ordenado.map((h, idxOrdenado) => {
+    const idxOriginal = historico.indexOf(h);
+    const laudoLink = h.laudoUrl
+      ? `<a href="${h.laudoUrl}" target="_blank" rel="noopener" style="font-size:14px;text-decoration:none;margin-left:6px" title="Ver laudo/foto">📄</a>`
+      : "";
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--surface2)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div>
+          <div style="font-weight:600;font-size:13px">${fmtData(h.data+"T00:00:00")} ${laudoLink}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${h.responsavel || "—"}</div>
+          ${h.obs ? `<div style="font-size:13px;margin-top:6px;color:var(--text)">${h.obs}</div>` : ""}
+        </div>
+        <button class="btn btn-red" style="font-size:11px;padding:5px 8px;flex-shrink:0" onclick="excluirHistorico(${idxOriginal})">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function adicionarHistorico() {
+  const data = document.getElementById("histData").value;
+  const resp = document.getElementById("histResp").value.trim();
+  const obs  = document.getElementById("histObs").value.trim();
+  const laudoUrl = document.getElementById("histLaudo").value.trim();
+
+  if (!data) {
+    shake(document.getElementById("histData"));
+    return;
+  }
+
+  const item = equipamentos.find(e => e.id === histEquipamentoId);
+  if (!item) return;
+
+  const historico = item.historico ? [...item.historico] : [];
+  historico.push({ data, responsavel: resp, obs, laudoUrl });
+
+  try {
+    await window.db.collection("equipamentos").doc(histEquipamentoId).update({ historico });
+    document.getElementById("histData").value  = "";
+    document.getElementById("histResp").value  = "";
+    document.getElementById("histObs").value   = "";
+    document.getElementById("histLaudo").value = "";
+    mostrarToast("Registro adicionado ao histórico!", "green");
+  } catch(e) {
+    mostrarToast("Erro ao salvar histórico: " + e.message, "red");
+  }
+}
+
+async function excluirHistorico(idx) {
+  const item = equipamentos.find(e => e.id === histEquipamentoId);
+  if (!item || !item.historico) return;
+  const historico = [...item.historico];
+  historico.splice(idx, 1);
+  try {
+    await window.db.collection("equipamentos").doc(histEquipamentoId).update({ historico });
+    mostrarToast("Registro removido.", "green");
+  } catch(e) {
+    mostrarToast("Erro ao remover: " + e.message, "red");
+  }
 }
