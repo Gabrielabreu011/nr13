@@ -466,15 +466,100 @@ function mostrarToast(msg, tipo="green") {
 
 // ── CSV ──
 function exportarCSV() {
-  if(!equipamentos.length){alert("Nenhum dado.");return;}
-  let csv="Equipamento;TAG;Setor;Tipo;Ultima Inspecao;Validade (meses);Responsavel;Status\n";
-  equipamentos.forEach(item=>{
-    const p=calcularProxima(item.ultimaInspecao,item.validadeMeses);
-    const d=calcularDias(p); const s=obterStatusCalc(d,item.statusCustom);
-    csv+=`${item.nome};${item.tag};${item.setor};${item.tipo};${item.ultimaInspecao};${item.validadeMeses};${item.responsavel};${s.texto}\n`;
+  if (!equipamentos.length) { mostrarToast("Nenhum dado para exportar.", "yellow"); return; }
+  if (typeof XLSX === "undefined") { mostrarToast("Biblioteca de Excel ainda carregando, tente de novo.", "red"); return; }
+
+  // Cabeçalhos
+  const header = ["Equipamento","TAG","Setor","Tipo NR-13","Última Inspeção","Próxima Inspeção","Validade (meses)","Dias Restantes","Responsável","Status","Link do Laudo"];
+
+  // Linhas de dados
+  const linhas = equipamentos.map(item => {
+    const prox = calcularProxima(item.ultimaInspecao, item.validadeMeses);
+    const dias = calcularDias(prox);
+    const st   = obterStatusCalc(dias, item.statusCustom);
+    const statusTexto = st.classe === "descomissionado" ? "Descomissionado"
+                      : st.classe === "vencida" ? "Vencida"
+                      : st.classe === "proxima" ? "Vence em breve"
+                      : "Dentro da validade";
+    const diasTxt = st.classe === "descomissionado" ? "—"
+                  : dias < 0 ? `${Math.abs(dias)} dias vencido` : `${dias} dias`;
+    return [
+      item.nome, item.tag, item.setor, item.tipo,
+      fmtData(item.ultimaInspecao + "T00:00:00"),
+      st.classe === "descomissionado" ? "—" : fmtData(prox),
+      item.validadeMeses, diasTxt, item.responsavel, statusTexto,
+      item.laudoUrl || ""
+    ];
   });
-  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="nr13_export.csv"; a.click();
+
+  // Monta a planilha com título
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const aoa = [
+    ["RELATÓRIO NR-13 — CONTROLE DE INSPEÇÕES"],
+    [`Gerado em ${hoje}  ·  Total: ${equipamentos.length} equipamento(s)`],
+    [],
+    header,
+    ...linhas
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Largura das colunas
+  ws["!cols"] = [
+    {wch:26},{wch:12},{wch:18},{wch:16},{wch:15},{wch:15},
+    {wch:14},{wch:16},{wch:18},{wch:18},{wch:40}
+  ];
+
+  // Mescla título e subtítulo nas 11 colunas
+  ws["!merges"] = [
+    {s:{r:0,c:0},e:{r:0,c:10}},
+    {s:{r:1,c:0},e:{r:1,c:10}}
+  ];
+
+  // Estilos
+  const verde = "0D9E5C";
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if (!ws[addr]) continue;
+      if (R === 0) { // título
+        ws[addr].s = { font:{bold:true, sz:15, color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:verde}}, alignment:{horizontal:"center", vertical:"center"} };
+      } else if (R === 1) { // subtítulo
+        ws[addr].s = { font:{sz:10, color:{rgb:"5A6270"}}, alignment:{horizontal:"center"} };
+      } else if (R === 3) { // cabeçalho da tabela
+        ws[addr].s = { font:{bold:true, sz:11, color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:"1A1D27"}}, alignment:{horizontal:"center", vertical:"center"}, border:thinBorder() };
+      } else if (R > 3) { // dados
+        const statusCol = 9;
+        const zebra = (R % 2 === 0) ? "F7F8FA" : "FFFFFF";
+        let cellStyle = { font:{sz:10}, fill:{fgColor:{rgb:zebra}}, border:thinBorder(), alignment:{vertical:"center"} };
+        // Colorir a célula de status
+        if (C === statusCol) {
+          const v = ws[addr].v;
+          let cor = null;
+          if (v === "Vencida") cor = "C8253D";
+          else if (v === "Vence em breve") cor = "D9820A";
+          else if (v === "Dentro da validade") cor = "0D9E5C";
+          else if (v === "Descomissionado") cor = "6B7280";
+          if (cor) cellStyle = { font:{bold:true, sz:10, color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:cor}}, border:thinBorder(), alignment:{horizontal:"center", vertical:"center"} };
+        }
+        ws[addr].s = cellStyle;
+      }
+    }
+  }
+
+  // Altura das linhas de título
+  ws["!rows"] = [{hpt:26},{hpt:16},{hpt:6},{hpt:20}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "NR-13");
+  XLSX.writeFile(wb, `nr13_relatorio_${hoje.replace(/\//g,"-")}.xlsx`);
+  mostrarToast("📊 Relatório Excel exportado!", "green");
+}
+
+function thinBorder() {
+  const s = { style:"thin", color:{rgb:"D0D5DD"} };
+  return { top:s, bottom:s, left:s, right:s };
 }
 
 // ── HISTÓRICO DE MANUTENÇÕES ──
