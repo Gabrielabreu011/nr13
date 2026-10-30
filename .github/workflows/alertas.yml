@@ -1,1 +1,32 @@
+name: Alertas NR-13
 
+on:
+  schedule:
+    # 11:00 UTC = 08:00 em Brasília, de segunda a sexta
+    - cron: "0 11 * * 1-5"
+  workflow_dispatch: # permite rodar manualmente pela aba Actions (para testar)
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: automacao
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Enviar alertas
+        run: node enviar-alertas.js
+        env:
+          TZ: America/Sao_Paulo
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          DESTINATARIOS: ${{ secrets.DESTINATARIOS }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
